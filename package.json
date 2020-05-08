@@ -8,7 +8,7 @@
     "name": "Nico Beyer",
     "email": "nico@beyer-soehne.de"
   },
-  "license": "UNLICENSED",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/NicoBeyer/bs-odm.git"
