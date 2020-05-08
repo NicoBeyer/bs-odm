@@ -1,0 +1,38 @@
+{
+  "name": "bs-odm",
+  "version": "1.0.0",
+  "description": "Object oriented Mongodb Mapper",
+  "main": "lib/src/index.js",
+  "typings": "lib/src/index",
+  "author": {
+    "name": "Nico Beyer",
+    "email": "nico@beyer-soehne.de"
+  },
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NicoBeyer/bs-odm.git"
+  },
+  "dependencies": {
+    "lodash": "^4.17.15"
+  },
+  "peerDependencies": {
+    "mongodb": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.0",
+    "@types/mocha": "^5.2.7",
+    "@types/mongodb": "^3.3.1",
+    "@types/node": "^12.7.2",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0",
+    "mongodb": "^3.5.7",
+    "source-map-support": "^0.5.13",
+    "ts-node": "^8.3.0",
+    "typegoose": "^5.9.1",
+    "typescript": "^3.5.3"
+  },
+  "scripts": {
+    "test": "node --harmony node_modules/mocha/bin/mocha lib/test/"
+  }
+}

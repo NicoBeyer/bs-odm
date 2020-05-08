@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["es2019"],
+    "target": "es2019",
+    "declaration": true,
+    "outDir": "lib/",
+    "experimentalDecorators": true
+  },
+  "exclude": [
+    "node_modules",
+    "lib"
+  ]
+}

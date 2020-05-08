@@ -1,0 +1,114 @@
+---
+kind: pipeline
+name: npm_mongo_1.3.0
+
+## Secrets in use
+# NPM_PUBLISH_TOKEN: Token with publish rights on repository for project
+# NPM_TOKEN: Token with read rights to @nbeyer/* repositories
+# AWS_ACCESS_KEY_ID
+# AWS_SECRET_ACCESS_KEY
+
+trigger:
+  event:
+    - push
+
+steps:
+  - name: restore-cache-with-key
+    image: meltwater/drone-cache:dev
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: AWS_SECRET_ACCESS_KEY
+    settings:
+      restore: true
+      bucket: beyer.dev.cache
+      region: eu-west-1
+      archive_format: "gzip"
+      cache_key: '{{ .Repo.Name }}'
+      mount:
+        - 'node_modules'
+
+  - name: build
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node12.x
+    commands:
+      - node -v
+      - npm -v
+      - tsc -v
+      - npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
+      - npm i
+      - tsc
+    environment:
+      NPM_TOKEN:
+        from_secret: NPM_TOKEN
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: AWS_SECRET_ACCESS_KEY
+    settings:
+      rebuild: true
+      bucket: beyer.dev.cache
+      region: eu-west-1
+      archive_format: "gzip"
+      cache_key: '{{ .Repo.Name }}'
+      mount:
+        - 'node_modules'
+
+  - name: unittest
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node12.x
+    commands:
+      - npm test
+    environment:
+      MONGO_URL: mongodb://mongo/
+      AWS_ACCESS_KEY_ID:
+        from_secret: AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: AWS_SECRET_ACCESS_KEY
+      AWS_DEFAULT_OUTPUT: json
+      AWS_DEFAULT_REGION: eu-west-1
+
+  - name: publish
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node12.x
+    commands:
+      - npm config set //registry.npmjs.org/:_authToken $NPM_PUBLISH_TOKEN
+      - PKG_NAME="$(jq -r '.name' package.json)"
+      - PKG_VERSION="$(jq -r '.version' package.json)"
+      - PGK_VERSION_MAJOR="$(echo $PKG_VERSION | cut -d '.' -f1)"
+      - PGK_VERSION_MINOR="$(echo $PKG_VERSION | cut -d '.' -f2)"
+      - NPM_VERSION="$(npm view $PKG_NAME version)"
+      - NPM_VERSION_MAJOR="$(echo $NPM_VERSION | cut -d '.' -f1)"
+      - NPM_VERSION_MINOR="$(echo $NPM_VERSION | cut -d '.' -f2)"
+      - if (($PGK_VERSION_MAJOR > $NPM_VERSION_MAJOR)); then METHOD="major"; elif (($PGK_VERSION_MINOR > $NPM_VERSION_MINOR)); then METHOD="minor"; else METHOD="pathc"; fi
+      - npm version $METHOD --no-git-tag-version -m "%s Commit by $DRONE_COMMIT_AUTHOR $DRONE_COMMIT_SHA $DRONE_COMMIT_MESSAGE"
+      - npm publish
+      - PKG_VERSION="$(npm view $PKG_NAME version)"
+      - git config user.email $DRONE_COMMIT_AUTHOR_EMAIL
+      - git config user.name $DRONE_COMMIT_AUTHOR
+      - git tag -m "Commit by $DRONE_COMMIT_AUTHOR $DRONE_COMMIT_MESSAGE $DRONE_COMMIT_SHA" -a $PKG_VERSION $DRONE_COMMIT_SHA
+      - git push --follow-tags --set-upstream origin master
+    environment:
+      NPM_PUBLISH_TOKEN:
+        from_secret: NPM_PUBLISH_TOKEN
+      DRONE_COMMIT_AUTHOR: $DRONE_COMMIT_AUTHOR
+      DRONE_COMMIT_AUTHOR_EMAIL: $DRONE_COMMIT_AUTHOR_EMAIL
+      DRONE_COMMIT_SHA: $DRONE_COMMIT_SHA
+      DRONE_COMMIT_MESSAGE: $DRONE_COMMIT_MESSAGE
+    when:
+      branch:
+        - master
+
+services:
+  - name: mongo
+    image: mongo:4.2
+
+
+
+---
+kind: signature
+hmac: a812721f36356b3a08111f11b710c8d408fc070c709d148154633cba7d773458
+
+...
