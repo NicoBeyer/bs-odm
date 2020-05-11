@@ -52,6 +52,7 @@ steps:
       - NPM_VERSION_MINOR="$(echo $NPM_VERSION | cut -d '.' -f2)"
       - if (($PGK_VERSION_MAJOR > $NPM_VERSION_MAJOR)); then METHOD="major"; elif (($PGK_VERSION_MINOR > $NPM_VERSION_MINOR)); then METHOD="minor"; else METHOD="patch"; fi
       - npm version --no-git-tag-version --allow-same-version $NPM_VERSION
+      - git commit
       - npm version $METHOD -m "%s Commit by $DRONE_COMMIT_AUTHOR $DRONE_COMMIT_SHA $DRONE_COMMIT_MESSAGE [CI SKIP]"
       - npm publish
       - PKG_VERSION="$(npm view $PKG_NAME version)"
