@@ -50,7 +50,7 @@ steps:
       - NPM_VERSION="$(npm view $PKG_NAME version)"
       - NPM_VERSION_MAJOR="$(echo $NPM_VERSION | cut -d '.' -f1)"
       - NPM_VERSION_MINOR="$(echo $NPM_VERSION | cut -d '.' -f2)"
-      - echo "NPM_VERSION=$NPM_VERSION | PKG_VERSION=$PKG_VERSION
+      - echo "NPM_VERSION=$NPM_VERSION | PKG_VERSION=$PKG_VERSION"
       - if (($NPM_VERSION != $PKG_VERSION)); then npm version --no-git-tag-version --allow-same-version $NPM_VERSION && git add package*.json && git commit -m "reset version to npm verion [CI SKIP]"; fi
       - if (($PGK_VERSION_MAJOR > $NPM_VERSION_MAJOR)); then METHOD="major"; elif (($PGK_VERSION_MINOR > $NPM_VERSION_MINOR)); then METHOD="minor"; else METHOD="patch"; fi
       - echo "npm version $METHOD"
