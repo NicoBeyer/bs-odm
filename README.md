@@ -65,7 +65,7 @@ For retrieving objects you can call the static functions on the class:
         console.log(example.property);
     });
     
-For transactional updates of in database instances:
+For transactional updates:
 
     example = await Example.findOneAndUpdate({_id: id}, {property: "New"});
     
