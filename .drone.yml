@@ -13,22 +13,6 @@ trigger:
     - push
 
 steps:
-  - name: restore-cache-with-key
-    image: meltwater/drone-cache:dev
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: AWS_ACCESS_KEY_ID
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: AWS_SECRET_ACCESS_KEY
-    settings:
-      restore: true
-      bucket: beyer.dev.cache
-      region: eu-west-1
-      archive_format: "gzip"
-      cache_key: '{{ .Repo.Name }}'
-      mount:
-        - 'node_modules'
-
   - name: build
     image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node12.x
     commands:
@@ -41,22 +25,6 @@ steps:
     environment:
       NPM_TOKEN:
         from_secret: NPM_TOKEN
-
-  - name: rebuild-cache
-    image: meltwater/drone-cache:dev
-    environment:
-      AWS_ACCESS_KEY_ID:
-        from_secret: AWS_ACCESS_KEY_ID
-      AWS_SECRET_ACCESS_KEY:
-        from_secret: AWS_SECRET_ACCESS_KEY
-    settings:
-      rebuild: true
-      bucket: beyer.dev.cache
-      region: eu-west-1
-      archive_format: "gzip"
-      cache_key: '{{ .Repo.Name }}'
-      mount:
-        - 'node_modules'
 
   - name: unittest
     image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node12.x
@@ -109,6 +77,6 @@ services:
 
 ---
 kind: signature
-hmac: 06ca3f8f9a4054e9bc1870a42aa0b7ce5636be6ceb26dcb247966f74941498d6
+hmac: 5754bab16354cf04d68d79e231bdb58fc8ebe27e1fd268a40e0d9d8f2dafa497
 
 ...
