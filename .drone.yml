@@ -82,7 +82,7 @@ steps:
       - NPM_VERSION="$(npm view $PKG_NAME version)"
       - NPM_VERSION_MAJOR="$(echo $NPM_VERSION | cut -d '.' -f1)"
       - NPM_VERSION_MINOR="$(echo $NPM_VERSION | cut -d '.' -f2)"
-      - if (($PGK_VERSION_MAJOR > $NPM_VERSION_MAJOR)); then METHOD="major"; elif (($PGK_VERSION_MINOR > $NPM_VERSION_MINOR)); then METHOD="minor"; else METHOD="pathc"; fi
+      - if (($PGK_VERSION_MAJOR > $NPM_VERSION_MAJOR)); then METHOD="major"; elif (($PGK_VERSION_MINOR > $NPM_VERSION_MINOR)); then METHOD="minor"; else METHOD="patch"; fi
       - npm version $METHOD --no-git-tag-version -m "%s Commit by $DRONE_COMMIT_AUTHOR $DRONE_COMMIT_SHA $DRONE_COMMIT_MESSAGE"
       - npm publish
       - PKG_VERSION="$(npm view $PKG_NAME version)"
@@ -109,6 +109,6 @@ services:
 
 ---
 kind: signature
-hmac: a812721f36356b3a08111f11b710c8d408fc070c709d148154633cba7d773458
+hmac: 06ca3f8f9a4054e9bc1870a42aa0b7ce5636be6ceb26dcb247966f74941498d6
 
 ...
