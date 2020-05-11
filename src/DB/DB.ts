@@ -31,9 +31,9 @@ export interface MongoLikeDb {
 export interface MongoLikeCollection {
     findOne(selector): Promise<any>;
     find(selector): Cursor;
-    insertOne(docs: any, options?: CollectionInsertOneOptions): Promise<InsertOneWriteOpResult>;
+    insertOne(docs: any, options?: CollectionInsertOneOptions): Promise<InsertOneWriteOpResult<any>>;
     updateOne(filter, update, options?: UpdateOneOptions): Promise<UpdateWriteOpResult>;
-    findOneAndUpdate(filter, update, options?: FindOneAndUpdateOption): Promise<FindAndModifyWriteOpResultObject>;
+    findOneAndUpdate(filter, update, options?: FindOneAndUpdateOption): Promise<FindAndModifyWriteOpResultObject<any>>;
     countDocuments(query?, options?: MongoCountPreferences): Promise<number>;
     deleteMany(filter, options?: CommonOptions): Promise<DeleteWriteOpResultObject>;
     deleteOne(filter, options?: CommonOptions & { bypassDocumentValidation?: boolean }): Promise<DeleteWriteOpResultObject>;
