@@ -1,6 +1,13 @@
 import {DatabaseObject, DB} from "../src";
 import {collection, exclude, field} from "../src/DB/Decorators";
-import {assert} from "chai";
+import * as _ from "lodash";
+import * as chai from "chai";
+import * as chaiAsPromised from "chai-as-promised";
+import * as Bluebird from "bluebird";
+
+chai.use(chaiAsPromised);
+const assert = chai.assert;
+chai.should();
 
 const MONGO = process.env.MONGO_URL ?
     process.env.MONGO_URL + "test_MongoDB" :
@@ -20,6 +27,12 @@ describe("Decorators", async function() {
 
     after(async function() {
         await DB.disconnect(true);
+    });
+
+    afterEach(async function(){
+        for(const collection of await DB.collections()) {
+            await collection.deleteMany({});
+        }
     });
 
     it("@field", async function() {
@@ -153,6 +166,147 @@ describe("Decorators", async function() {
         assert.deepEqual(res[0].field1, test.field1);
     });
 
+    it("findOneAndUpdate respects Decorator @field", async function() {
+        const collectionName = "TestCollection";
+
+        const updateQuery = {
+            $currentDate: {
+                currentDate: {$type: "date"},
+                currentDateExc: {$type: "date"},
+            },
+            $inc: {
+                inc: 1,
+                incExc: 1
+            },
+            $min: {
+                min: 0,
+                minExc: 0
+            },
+            $max: {
+                max: 100,
+                maxExc: 100
+            },
+            $mul: {
+                mul: 2,
+                mulExc: 2
+            },
+            $rename: {
+                rename1: "NewName",
+                rename2: "renameExc"
+            },
+            $set: {
+                set: "Hello",
+                setExc: "World"
+            },
+            $setOnInsert: {
+                setOnInsert: "Hello",
+                setOnInsertExc: "Hello"
+            },
+        }
+
+        class Test extends DatabaseObject {
+
+            @field()
+            currentDate: Date;
+            @field()
+            inc = 1;
+            @field()
+            min = 1;
+            @field()
+            max = 1;
+            @field()
+            mul = 2;
+            @field()
+            rename1 = "Value";
+            @field()
+            rename2 = "Value";
+            @field()
+            NewName: string;
+            @field()
+            set: "OldValue"
+            @field()
+            setOnInsert: string;
+        }
+        const test = new Test();
+        await test.save();
+
+        for (const op in updateQuery) {
+            await assert.isRejected(Promise.resolve().then(async () => {
+                const res = await Test.findOneAndUpdate({_id: test._id}, _.pick(updateQuery, [op]));
+                assert.fail("There should have been an error.");
+            }), "Update object contains fields not defiend for Test [\"" + op.replace("$","") + "Exc\"]");
+        }
+
+    });
+
+    it("findOneAndUpdate respects Decorator @exclude", async function() {
+        const collectionName = "TestCollection";
+
+        const updateQuery = {
+            $currentDate: {
+                currentDate: {$type: "date"},
+                currentDateExc: {$type: "date"},
+            },
+            $inc: {
+                inc: 1,
+                incExc: 1
+            },
+            $min: {
+                min: 0,
+                minExc: 0
+            },
+            $max: {
+                max: 100,
+                maxExc: 100
+            },
+            $mul: {
+                mul: 2,
+                mulExc: 2
+            },
+            $rename: {
+                rename1: "NewName",
+                rename2: "renameExc"
+            },
+            $set: {
+                set: "Hello",
+                setExc: "World"
+            },
+            $setOnInsert: {
+                setOnInsert: "Hello",
+                setOnInsertExc: "Hello"
+            },
+        }
+
+        class Test extends DatabaseObject {
+
+            @exclude()
+            currentDateExc: Date;
+            @exclude()
+            incExc = 1;
+            @exclude()
+            minExc = 1;
+            @exclude()
+            maxExc = 1;
+            @exclude()
+            mulExc = 2;
+            @exclude()
+            renameExc: string;
+            @exclude()
+            setExc: "OldValue"
+            @exclude()
+            setOnInsertExc: string;
+        }
+        const test = new Test();
+        await test.save();
+
+        for (const op in updateQuery) {
+            await assert.isRejected(Promise.resolve().then(async () => {
+                const res = await Test.findOneAndUpdate({_id: test._id}, _.pick(updateQuery, [op]));
+                assert.fail("There should have been an error.");
+            }), "Update object contains fields excluded from Test [\"" + op.replace("$","") + "Exc\"]");
+        }
+
+    });
 
 });
 

@@ -1,6 +1,3 @@
-/**
- * Created by lukee_000 on 17.02.2017.
- */
 import {DB, MongoLikeCollection} from './DB'
 import {FindOneAndReplaceOption} from "mongodb";
 import * as _ from "lodash";
@@ -101,17 +98,10 @@ export abstract class DatabaseObject {
     }
 
     async save(fields?: any): Promise<this> {
+        const Class = this.constructor as any;
         let coll = await this.getCollection();
-        let Class = (this.constructor as any) as Decoratable;
 
-        let obj:any
-        if (Class.fields && Class.fields.length > 0) {
-            obj = _.assign({}, _.pick(this, Class.fields));
-        } else if (Class.excludedFields && Class.excludedFields.length > 0){
-            obj = _.omit(this, Class.excludedFields);
-        } else {
-            obj = this;
-        }
+        let obj = Class.pickFields(this);
 
         if(fields){
             obj = this.copyFields(fields, obj)
@@ -124,13 +114,35 @@ export abstract class DatabaseObject {
             if (!this._id) {
                 throw new Error('To update or upsert a document an _id is required');
             }
-            let result = await coll.updateOne({_id: this._id}, {$set: obj}, {upsert:true});
-            if(result.result.ok != 1){
-                throw new Error('Unable to update document _id=' + this._id + ' in collection '+ (<any>this.constructor).getCollectionName());
-            }
+            let result = await coll.findOneAndUpdate(
+                {_id: this._id},
+                {$set: obj},
+                {
+                    upsert:true,
+                    returnOriginal: false
+                });
+
+            Object.assign(this, result);
+
+            this.updateFields()
         }
 
         return this;
+    }
+
+    private static pickFields(obj: any) {
+        let Class = (this as any) as Decoratable;
+
+        let ret:any
+        if (Class.fields && Class.fields.length > 0) {
+            ret = _.assign({}, _.pick(obj, Class.fields));
+        } else if (Class.excludedFields && Class.excludedFields.length > 0){
+            ret = _.omit(obj, Class.excludedFields);
+        } else {
+            ret = obj;
+        }
+
+        return ret;
     }
 
     public copyFields(fields:any, source:DatabaseObject):any{
@@ -156,6 +168,13 @@ export abstract class DatabaseObject {
         let self = this as any
         let coll = await this._getCollection();
 
+        _.keys(update).forEach((key) => {
+            this.validateFields(update[key]);
+            if (key === "$rename") {
+                this.validateFields(this.invertObject(update[key]));
+            }
+        });
+
         let result = await coll.findOneAndUpdate(filter, update, options)
 
         if(result.value){
@@ -164,6 +183,38 @@ export abstract class DatabaseObject {
             return null
         }
     }
+
+    private static validateFields(obj: any) {
+        let Class = (this as any) as Decoratable;
+
+        let error = false;
+        const objectKeys = _.keys(obj);
+        if (Class.fields && Class.fields.length > 0){
+            const intersection = _.intersection(Class.fields, objectKeys);
+            if (intersection.length !== objectKeys.length) {
+                throw new Error("Update object contains fields not defiend for " + this.name +
+                    " " + JSON.stringify(_.difference(objectKeys, Class.fields)));
+            }
+
+        } else if (Class.excludedFields && Class.excludedFields.length > 0) {
+            const intersection = _.intersection(objectKeys, Class.excludedFields);
+            if (intersection.length !== 0) {
+                throw new Error("Update object contains fields excluded from " + this.name +
+                    " " + JSON.stringify(intersection));
+            }
+        }
+
+        return true;
+    }
+
+    private static invertObject(obj: any) {
+        return _.map(obj, (key, value) =>  ({value, key})).reduce((acc, val) => {
+                acc[val.key] = val.value;
+                return acc;
+            }
+            , {});
+    }
+
 
     static async count<Type extends DatabaseObject>(filter: any):Promise<number>{
         let self = this as any
@@ -179,16 +230,25 @@ export abstract class DatabaseObject {
      * @returns {Type}
      */
     protected updateFields<Type extends DatabaseObject>():Type {
-        let self = <any>this;
         let Class = (this.constructor as any) as Decoratable;
 
         if (Class.typedFields) {
             for (const key in Class.typedFields) {
-                self[key] = new Class.typedFields[key](self[key]);
+                this.updateField(key, Class.typedFields[key]);
             }
         }
 
-        return <Type>self
+        return <any>this;
+    }
+
+    private updateField(key: string, Type: any) {
+        let self = <any>this;
+
+        if (Type.instantiate) {
+            self[key] = Type.instantiate(self[key]);
+        } else {
+            self[key] = new Type(self[key]);
+        }
     }
 
     async remove():Promise<void>{

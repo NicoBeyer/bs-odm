@@ -66,8 +66,8 @@ For retrieving objects you can call the static functions on the class:
     });
     
 For transactional updates:
-
-    example = await Example.findOneAndUpdate({_id: id}, {property: "New"});
+    
+    const example = await Example.findOneAndUpdate({_id: id}, {property: "New"});
     
 Remove an instance from database:
 
