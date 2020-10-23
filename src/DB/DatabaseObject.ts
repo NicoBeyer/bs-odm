@@ -164,7 +164,7 @@ export abstract class DatabaseObject {
         return ret
     }
 
-    static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndReplaceOption):Promise<Type>{
+    static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndReplaceOption<Type>):Promise<Type>{
         let self = this as any
         let coll = await this._getCollection();
 
@@ -296,7 +296,16 @@ export abstract class DatabaseObject {
 
     private static async _getCollection(): Promise<MongoLikeCollection> {
         const Class = (this as any) as (hasCollection & Decoratable);
-        return Class.collection || (Class.collection = await DB.collection(Class.getCollectionName()));
+        if (!Class.collection) {
+            Class.collection = await DB.collection(Class.getCollectionName());
+            DB.addListener(DB.EVENT_DISCONNECTED, () => {
+                delete Class.collection;
+            });
+            DB.addListener(DB.EVENT_CONNECTED, () => {
+                delete Class.collection;
+            });
+        }
+        return Class.collection;
     }
 
 }
