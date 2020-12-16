@@ -164,7 +164,7 @@ export abstract class DatabaseObject {
         return ret
     }
 
-    static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndReplaceOption<Type>):Promise<Type>{
+    public static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndReplaceOption<Type>):Promise<Type>{
         let self = this as any
         let coll = await this._getCollection();
 
@@ -182,6 +182,21 @@ export abstract class DatabaseObject {
         }else{
             return null
         }
+    }
+
+    public static async updateMany(filter: any, update: any, options?: any): Promise<number> {
+        let coll = await this._getCollection();
+
+        _.keys(update).forEach((key) => {
+            this.validateFields(update[key]);
+            if (key === "$rename") {
+                this.validateFields(this.invertObject(update[key]));
+            }
+        });
+
+        let result = await coll.updateMany(filter, update, options);
+
+        return result.modifiedCount;
     }
 
     private static validateFields(obj: any) {

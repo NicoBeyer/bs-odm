@@ -77,6 +77,7 @@ describe('bs-mongo-mapper', function(){
 
         let objects = await DBObject.find<DBObject>({number: {$lte:1999}});
 
+        assert.equal(objects.length, 3);
         for(let o of objects){
             let index = o.number - 1000;
             assert.equal(o.number, 1000 + index);
@@ -89,6 +90,51 @@ describe('bs-mongo-mapper', function(){
             assert.equal(o.string, 'Some silly test string ' + index)
             }
         )
+
+    });
+
+    it('updateMany', async function(){
+        let obj = new DBObject({
+                number: 1001,
+                string: 'Some silly test string 1',
+                object: {name: 'Hello1', value: 'World1'},
+                array: ['one1', 'two1', 'three1'],
+                arrayarray: [['one1', 'two1', 'three1'],['one1', 'two1', 'three1'],['one1', 'two1', 'three1']]
+            }),
+            obj2 = new DBObject({
+                number: 1002,
+                string: 'Some silly test string 2',
+                object: {name: 'Hello2', value: 'World2'},
+                array: ['one2', 'two2', 'three2'],
+                arrayarray: [['one2', 'two2', 'three2'],['one2', 'two2', 'three2'],['one2', 'two2', 'three2']]
+            }),
+            obj3 = new DBObject({
+                number: 1003,
+                string: 'Some silly test string 3',
+                object: {name: 'Hello3', value: 'World3'},
+                array: ['one3', 'two3', 'three3'],
+                arrayarray: [['one3', 'two3', 'three3'],['one3', 'two3', 'three3'],['one3', 'two3', 'three3']]
+            });
+        await obj.save();
+        await obj2.save();
+        await obj3.save();
+
+        let ret1 = await DBObject.updateMany({number: {$lt: 1003}}, {$set: {update: true}});
+
+        assert.equal(ret1, 2);
+
+        let objects = await DBObject.find<DBObject>({number: {$lte:1999}});
+
+        assert.equal(objects.length, 3);
+        for(let o of objects){
+            let index = o.number - 1000;
+            assert.equal(o.number, 1000 + index);
+            assert.equal(o.string, 'Some silly test string ' + index);
+
+            if (index < 3) {
+                assert.isTrue(o.update);
+            }
+        }
 
     });
 
@@ -375,6 +421,7 @@ class DBObject extends DatabaseObject implements TestValues {
     object: any;
     array: Array<string>;
     arrayarray: Array<Array<string>>;
+    update: boolean;
 
     constructor(values?:TestValues){
         super();

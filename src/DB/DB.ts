@@ -3,6 +3,7 @@ import {
     CollectionInsertOneOptions,
     InsertOneWriteOpResult,
     FindOneAndUpdateOption,
+    UpdateManyOptions,
     FindAndModifyWriteOpResultObject,
     MongoCountPreferences,
     CommonOptions,
@@ -35,6 +36,7 @@ export interface MongoLikeCollection {
     insertOne(docs: any, options?: CollectionInsertOneOptions): Promise<InsertOneWriteOpResult<any>>;
     updateOne(filter, update, options?: UpdateOneOptions): Promise<UpdateWriteOpResult>;
     findOneAndUpdate<T>(filter, update, options?: FindOneAndUpdateOption<T>): Promise<FindAndModifyWriteOpResultObject<any>>;
+    updateMany(filter, update, options?: UpdateManyOptions): Promise<UpdateWriteOpResult>;
     countDocuments(query?, options?: MongoCountPreferences): Promise<number>;
     deleteMany(filter, options?: CommonOptions): Promise<DeleteWriteOpResultObject>;
     deleteOne(filter, options?: CommonOptions & { bypassDocumentValidation?: boolean }): Promise<DeleteWriteOpResultObject>;
