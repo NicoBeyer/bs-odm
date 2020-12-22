@@ -1,4 +1,4 @@
-import {hasCollection} from "./DatabaseObject";
+import {DatabaseObject, hasCollection} from "./DatabaseObject";
 
 export interface Decoratable {
     fields: string[];
@@ -13,6 +13,9 @@ export function field(type?: any) {
         targetClass.fields = targetClass.fields || [];
         targetClass.fields.push(key);
         if (type) {
+            if (!(target instanceof DatabaseObject)) {
+                throw new Error("Typed @field decorator not supported for nested documents, yet.");
+            }
             targetClass.typedFields = targetClass.typedFields || {};
             targetClass.typedFields[key] = type;
         }
@@ -33,4 +36,5 @@ export function collection(name?: string) {
         Class.collectionName = name || Class.getCollectionName();
     }
 }
+
 

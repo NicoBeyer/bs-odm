@@ -329,6 +329,11 @@ describe("Decorators", async function() {
 
         await test.save();
 
+        assert.instanceOf(test.nested, Nested);
+        for(const i of test.nestedArray) {
+            assert.instanceOf(i, Nested);
+        }
+
         const res = await testCollection.findOne({id: 5000});
         delete res._id;
         assert.deepEqual(res, {
@@ -346,6 +351,128 @@ describe("Decorators", async function() {
                     field1:"Test1",
                     field2: "Test2"
                 }
+            ]
+        });
+    });
+
+    it("Decorators on complex nested Object", async function() {
+        class Test extends DatabaseObject {
+            constructor() {
+                super();
+                this.include = new NestedInclude();
+                this.exclude = new NestedExclude();
+                this.nestedDecorators = new NestedDecorators();
+                this.nestedNoDecorators = new NestedNoDecorators();
+                this.nestedArray = [
+                    new NestedInclude(),
+                    new NestedExclude(),
+                    new NestedDecorators(),
+                    new NestedNoDecorators(),
+                ]
+            }
+            id = 6000;
+            include: NestedInclude;
+            exclude: NestedExclude;
+            nestedDecorators: NestedDecorators;
+            nestedNoDecorators: NestedNoDecorators;
+            nestedArray: any[];
+        }
+        class NestedExclude {
+            field1 = "field1";
+
+            @exclude()
+            nonField  = "Error";
+        }
+        class NestedInclude {
+            @field()
+            field1 = "field1";
+
+            nonField  = "Error";
+        }
+        class NestedNoDecorators {
+            constructor() {
+                this.nested1 = new NestedExclude();
+                this.nested2 = new NestedInclude();
+            }
+            field1 = "field1";
+            nested1: NestedExclude;
+            nested2: NestedInclude;
+        }
+        class NestedDecorators {
+            constructor() {
+                this.nested1 = new NestedExclude();
+                this.nested2 = new NestedInclude();
+            }
+            @field()
+            field1 = "field1";
+            nonField  = "Error";
+            @field()
+            nested1: NestedExclude;
+            @field()
+            nested2: NestedInclude;
+        }
+        const testCollection = await DB.collection(Test.getCollectionName());
+
+        const test = new Test();
+
+        await test.save();
+
+        assert.instanceOf(test.exclude, NestedExclude);
+        assert.instanceOf(test.include, NestedInclude);
+
+        const res = await testCollection.findOne({id: 6000});
+        delete res._id;
+        assert.deepEqual(res, {
+            id: 6000,
+            exclude: {
+                field1:"field1"
+            },
+            include: {
+                field1:"field1"
+            },
+            nestedDecorators: {
+                field1: "field1",
+                nested1: {
+                    field1: "field1",
+                },
+                nested2: {
+                    field1: "field1",
+                }
+            },
+            nestedNoDecorators: {
+                field1: "field1",
+                nested1: {
+                    field1: "field1",
+                },
+                nested2: {
+                    field1: "field1",
+                }
+            },
+            nestedArray: [
+                {
+                    field1:"field1"
+                },
+                {
+                    field1:"field1"
+                },
+                {
+                    field1: "field1",
+                        nested1: {
+                        field1: "field1",
+                    },
+                    nested2: {
+                        field1: "field1",
+                    }
+                },
+                {
+                    field1: "field1",
+                        nested1: {
+                        field1: "field1",
+                    },
+                    nested2: {
+                        field1: "field1",
+                    }
+                },
             ]
         });
     });

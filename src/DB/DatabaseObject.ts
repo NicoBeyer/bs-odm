@@ -101,7 +101,7 @@ export abstract class DatabaseObject {
         let obj = DatabaseObject.pickFields(this);
 
         if(fields){
-            obj = this.copyFields(fields, obj)
+            obj = DatabaseObject.copyFields(fields, obj)
         }
 
         if (this.isNew()) {
@@ -127,40 +127,7 @@ export abstract class DatabaseObject {
         return this;
     }
 
-    private static pickFields(obj: any) {
-        if (!obj || !obj.constructor ) {
-            return this;
-        }
-
-        let Class = (obj.constructor as any) as Decoratable;
-
-        let ret:any
-        if (Class.fields && Class.fields.length > 0) {
-            ret = _.pick(obj, Class.fields);
-        } else if (Class.excludedFields && Class.excludedFields.length > 0){
-            ret = _.omit(obj, Class.excludedFields);
-        } else {
-            ret = obj;
-        }
-
-        for (let k in ret) {
-            if (ret.hasOwnProperty(k)) {
-                if (Array.isArray(ret[k])) {
-                    ret[k] = ret[k].map(o => {
-                        return DatabaseObject.pickFields(o);
-                    });
-                } else {
-                    if (typeof ret[k] === "object") {
-                        ret[k] = DatabaseObject.pickFields(ret[k]);
-                    }
-                }
-            }
-        }
-
-        return ret;
-    }
-
-    public copyFields(fields:any, source:DatabaseObject):any{
+    private static copyFields(fields:any, source:DatabaseObject):any{
         let ret = {}
 
         for(let key in fields){
@@ -180,6 +147,31 @@ export abstract class DatabaseObject {
         }
 
         return ret
+    }
+
+    private static pickFields(obj: any): any {
+        if (Array.isArray(obj)) {
+            return obj.map(o => this.pickFields(o));
+        } else if (typeof obj === "object") {
+            const Class = (obj.constructor as any) as Decoratable;
+            if (obj instanceof Date) {
+                return obj;
+            } else if (Class.fields) {
+                return this.pickFields(_.pick(obj, Class.fields));
+            } else if (Class.excludedFields) {
+                return this.pickFields(_.omit(obj, Class.excludedFields));
+            } else {
+                let ret = {}
+                for (const k in obj) {
+                    if (obj.hasOwnProperty(k)) {
+                        ret[k] = this.pickFields(obj[k]);
+                    }
+                }
+                return ret;
+            }
+        } else {
+            return obj;
+        }
     }
 
     public static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndReplaceOption<Type>):Promise<Type>{
@@ -247,7 +239,7 @@ export abstract class DatabaseObject {
     }
 
 
-    static async count<Type extends DatabaseObject>(filter: any):Promise<number>{
+    public static async count<Type extends DatabaseObject>(filter: any):Promise<number>{
         let coll = await this._getCollection();
 
         return await coll.countDocuments(filter);

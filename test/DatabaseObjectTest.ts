@@ -304,7 +304,8 @@ describe('DatabaseObject', function(){
 
         for(let i = 0; i < 5; i++){
             let obj = new TestClass('Hello' + i, 'World');
-            await obj.save()
+            await obj.save();
+            assert.instanceOf(obj.object, SubClass);
         }
 
         let test = await TestClass.findOne<TestClass>({'object.name':'Hello0'});
