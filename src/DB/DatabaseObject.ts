@@ -23,7 +23,6 @@ export abstract class DatabaseObject {
     public _id:any
 
     static async find<Type extends DatabaseObject>(selector = {} as any, options = {} as QueryOptions):Promise<Type[]>{
-        let self = this as any
         let ret = [] as Type[]
         return DatabaseObject.findEach.call(this, selector, (obj:Type)=>{
             ret.push(obj)
@@ -34,7 +33,6 @@ export abstract class DatabaseObject {
 
     static async findOne<Type extends DatabaseObject>(selector = {} as any):Promise<Type>{
         const coll = await this._getCollection();
-        let self = this as any
         let obj = await coll.findOne(selector)
 
         if(!obj){
@@ -68,7 +66,7 @@ export abstract class DatabaseObject {
         }
 
         return (function recursive(){
-            return Promise.resolve().then(async (next)=>{
+            return Promise.resolve().then(async ()=>{
                 let promises = []
                 for(let i = 0; i < concurrent; i++){
                     let hasNext = await cur.hasNext();
@@ -98,10 +96,9 @@ export abstract class DatabaseObject {
     }
 
     async save(fields?: any): Promise<this> {
-        const Class = this.constructor as any;
         let coll = await this.getCollection();
 
-        let obj = Class.pickFields(this);
+        let obj = DatabaseObject.pickFields(this);
 
         if(fields){
             obj = this.copyFields(fields, obj)
@@ -131,15 +128,33 @@ export abstract class DatabaseObject {
     }
 
     private static pickFields(obj: any) {
-        let Class = (this as any) as Decoratable;
+        if (!obj || !obj.constructor ) {
+            return this;
+        }
+
+        let Class = (obj.constructor as any) as Decoratable;
 
         let ret:any
         if (Class.fields && Class.fields.length > 0) {
-            ret = _.assign({}, _.pick(obj, Class.fields));
+            ret = _.pick(obj, Class.fields);
         } else if (Class.excludedFields && Class.excludedFields.length > 0){
             ret = _.omit(obj, Class.excludedFields);
         } else {
             ret = obj;
+        }
+
+        for (let k in ret) {
+            if (ret.hasOwnProperty(k)) {
+                if (Array.isArray(ret[k])) {
+                    ret[k] = ret[k].map(o => {
+                        return DatabaseObject.pickFields(o);
+                    });
+                } else {
+                    if (typeof ret[k] === "object") {
+                        ret[k] = DatabaseObject.pickFields(ret[k]);
+                    }
+                }
+            }
         }
 
         return ret;
@@ -149,12 +164,15 @@ export abstract class DatabaseObject {
         let ret = {}
 
         for(let key in fields){
-            let field = key
-
+            if (!fields.hasOwnProperty(key)) {
+                continue;
+            }
             if(typeof fields[key] === 'object'){
                 let f = this.copyFields(fields[key], source[key]);
                 for(let k in f){
-                    ret[key + '.' + k] = f[k]
+                    if (f.hasOwnProperty(k)) {
+                        ret[key + '.' + k] = f[k]
+                    }
                 }
             }else if(fields[key]){
                 ret[key] = source[key]
@@ -165,7 +183,6 @@ export abstract class DatabaseObject {
     }
 
     public static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndReplaceOption<Type>):Promise<Type>{
-        let self = this as any
         let coll = await this._getCollection();
 
         _.keys(update).forEach((key) => {
@@ -202,12 +219,11 @@ export abstract class DatabaseObject {
     private static validateFields(obj: any) {
         let Class = (this as any) as Decoratable;
 
-        let error = false;
         const objectKeys = _.keys(obj);
         if (Class.fields && Class.fields.length > 0){
             const intersection = _.intersection(Class.fields, objectKeys);
             if (intersection.length !== objectKeys.length) {
-                throw new Error("Update object contains fields not defiend for " + this.name +
+                throw new Error("Update object contains fields not defined for " + this.name +
                     " " + JSON.stringify(_.difference(objectKeys, Class.fields)));
             }
 
@@ -232,12 +248,9 @@ export abstract class DatabaseObject {
 
 
     static async count<Type extends DatabaseObject>(filter: any):Promise<number>{
-        let self = this as any
         let coll = await this._getCollection();
 
-        let result = await coll.countDocuments(filter);
-
-        return result;
+        return await coll.countDocuments(filter);
     }
 
     /**
@@ -249,7 +262,9 @@ export abstract class DatabaseObject {
 
         if (Class.typedFields) {
             for (const key in Class.typedFields) {
-                this.updateField(key, Class.typedFields[key]);
+                if (Class.typedFields.hasOwnProperty(key)) {
+                    this.updateField(key, Class.typedFields[key]);
+                }
             }
         }
 

@@ -1,4 +1,4 @@
-import {DatabaseObject, hasCollection} from "./DatabaseObject";
+import {hasCollection} from "./DatabaseObject";
 
 export interface Decoratable {
     fields: string[];
@@ -8,7 +8,7 @@ export interface Decoratable {
 }
 
 export function field(type?: any) {
-    return function (target: DatabaseObject, key: string): void {
+    return function (target: Object, key: string): void {
         const targetClass = (target.constructor as any) as Decoratable;
         targetClass.fields = targetClass.fields || [];
         targetClass.fields.push(key);
@@ -20,7 +20,7 @@ export function field(type?: any) {
 }
 
 export function exclude() {
-    return function (target: DatabaseObject, key: string): void {
+    return function (target: Object, key: string): void {
         const targetClass = (target.constructor as any) as Decoratable;
         targetClass.excludedFields = targetClass.excludedFields || [];
         targetClass.excludedFields.push(key);

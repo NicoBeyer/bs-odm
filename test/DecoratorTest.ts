@@ -1,9 +1,7 @@
-import {DatabaseObject, DB} from "../src";
-import {collection, exclude, field} from "../src/DB/Decorators";
+import {DatabaseObject, DB, collection, exclude, field} from "../src";
 import * as _ from "lodash";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
-import * as Bluebird from "bluebird";
 
 chai.use(chaiAsPromised);
 const assert = chai.assert;
@@ -167,9 +165,7 @@ describe("Decorators", async function() {
     });
 
     it("findOneAndUpdate respects Decorator @field", async function() {
-        const collectionName = "TestCollection";
-
-        const updateQuery = {
+       const updateQuery = {
             $currentDate: {
                 currentDate: {$type: "date"},
                 currentDateExc: {$type: "date"},
@@ -232,16 +228,14 @@ describe("Decorators", async function() {
 
         for (const op in updateQuery) {
             await assert.isRejected(Promise.resolve().then(async () => {
-                const res = await Test.findOneAndUpdate({_id: test._id}, _.pick(updateQuery, [op]));
+                await Test.findOneAndUpdate({_id: test._id}, _.pick(updateQuery, [op]));
                 assert.fail("There should have been an error.");
-            }), "Update object contains fields not defiend for Test [\"" + op.replace("$","") + "Exc\"]");
+            }), "Update object contains fields not defined for Test [\"" + op.replace("$","") + "Exc\"]");
         }
 
     });
 
     it("findOneAndUpdate respects Decorator @exclude", async function() {
-        const collectionName = "TestCollection";
-
         const updateQuery = {
             $currentDate: {
                 currentDate: {$type: "date"},
@@ -301,11 +295,59 @@ describe("Decorators", async function() {
 
         for (const op in updateQuery) {
             await assert.isRejected(Promise.resolve().then(async () => {
-                const res = await Test.findOneAndUpdate({_id: test._id}, _.pick(updateQuery, [op]));
+                await Test.findOneAndUpdate({_id: test._id}, _.pick(updateQuery, [op]));
                 assert.fail("There should have been an error.");
             }), "Update object contains fields excluded from Test [\"" + op.replace("$","") + "Exc\"]");
         }
 
+    });
+
+    it("@exclude on nested Object", async function() {
+        class Test extends DatabaseObject {
+            id: number;
+            nested: Nested;
+            nestedArray: Nested[];
+        }
+        class Nested {
+            field1: string;
+            field2: string;
+
+            @exclude()
+            nonField: string;
+        }
+        const testCollection = await DB.collection(Test.getCollectionName());
+
+        const nested = new Nested();
+        nested.field1 = "Test1";
+        nested.field2 = "Test2";
+        nested.nonField = "Error";
+
+        const test = new Test();
+        test.id = 5000;
+        test.nested = nested;
+        test.nestedArray = [nested, nested];
+
+        await test.save();
+
+        const res = await testCollection.findOne({id: 5000});
+        delete res._id;
+        assert.deepEqual(res, {
+            id: 5000,
+            nested: {
+                field1:"Test1",
+                field2: "Test2"
+            },
+            nestedArray: [
+                {
+                    field1:"Test1",
+                    field2: "Test2"
+                },
+                {
+                    field1:"Test1",
+                    field2: "Test2"
+                }
+            ]
+        });
     });
 
 });

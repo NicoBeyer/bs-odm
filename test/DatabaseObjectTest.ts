@@ -5,9 +5,7 @@ const MONGO = process.env.MONGO_URL ?
     process.env.MONGO_URL + "test_bs-mongo-mapper" :
     "mongodb://localhost:27017/test_bs-mongo-mapper";
 
-describe('bs-mongo-mapper', function(){
-
-    let testsRunning = 0;
+describe('DatabaseObject', function(){
 
     before(async function() {
         this.timeout(7000);
@@ -84,7 +82,7 @@ describe('bs-mongo-mapper', function(){
             assert.equal(o.string, 'Some silly test string ' + index)
         }
 
-        let ret3 = await DBObject.findEach<DBObject>({number: {$lte:1999}}, o => {
+        await DBObject.findEach<DBObject>({number: {$lte:1999}}, o => {
             let index = o.number - 1000;
             assert.equal(o.number, 1000 + index);
             assert.equal(o.string, 'Some silly test string ' + index)
@@ -229,14 +227,13 @@ describe('bs-mongo-mapper', function(){
 
     it("skips results in findEach", async function(){
 
-        const testObjs = [];
         for (let i = 0; i < 10; i++) {
             const obj = new TestClass("skips results in findEach", "Value " + (i + 1));
             await obj.save();
         }
 
         let count = 0;
-        await TestClass.findEach({"object.name": "skips results in findEach"}, (value) => {
+        await TestClass.findEach({"object.name": "skips results in findEach"}, () => {
             count++;
         }, {skip: 5});
         assert.equal(count, 5);
@@ -253,7 +250,6 @@ describe('bs-mongo-mapper', function(){
 
     it("skips and limits results in find", async function(){
 
-        const testObjs = [];
         for (let i = 0; i < 10; i++) {
             const obj = new TestClass("skips results in find", "Value " + (i + 1));
             await obj.save();
@@ -324,7 +320,7 @@ describe('bs-mongo-mapper', function(){
         }
 
         let i = 0;
-        await TestClass.findEach<TestClass>({}, (test3)=>{
+        await TestClass.findEach<TestClass>({}, ()=>{
             assert.instanceOf(test2[i].object, SubClass);
             assert.equal(test2[i].object.toString(), 'Hello' + i + '=World');
             i++
@@ -337,9 +333,9 @@ describe('bs-mongo-mapper', function(){
         const test = new DBObject();
         await test.save();
 
-        await DBObject.findEach({}, o => {
+        await DBObject.findEach({}, () => {
             throw new Error('This is an Error')
-        }).then(ret=>{
+        }).then(() =>{
             assert.fail(null, null, 'Expected an Error to be thrown');
         }).catch(err=>{
             assert.instanceOf(err, Error);
@@ -347,7 +343,7 @@ describe('bs-mongo-mapper', function(){
         });
 
         try{
-            await DBObject.findEach({}, o => {
+            await DBObject.findEach({}, () => {
                 throw new Error('This is an Error')
             });
             assert.fail(null, null, 'Expected an Error to be thrown')
