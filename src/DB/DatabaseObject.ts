@@ -1,5 +1,5 @@
 import {DB, MongoLikeCollection} from './DB'
-import {FindOneAndReplaceOption} from "mongodb";
+import {FindOneAndReplaceOption, ObjectId} from "mongodb";
 import * as _ from "lodash";
 import {Decoratable} from "./Decorators";
 
@@ -156,7 +156,9 @@ export abstract class DatabaseObject {
             const Class = (obj.constructor as any) as Decoratable;
             if (obj instanceof Date) {
                 return obj;
-            } else if (Class.fields) {
+            } else if (obj instanceof ObjectId) {
+                return obj;
+            }else if (Class.fields) {
                 return this.pickFields(_.pick(obj, Class.fields));
             } else if (Class.excludedFields) {
                 return this.pickFields(_.omit(obj, Class.excludedFields));
