@@ -142,6 +142,24 @@ You can override this with the @collection decorator.
         property: string;
     }
 
+#### Decorators on Nested Classes
+
+You can use decorators to control the fields stored on nested classes.
+
+    class Example extends DatabaseObject {
+        nested: Nested;
+        nestedArray: Nested[];
+    }
+
+    class Nested {
+        @field()
+        fields: any;
+
+        @excluded()
+        excludedField: any
+    }
+
+
 ### Bring your own NoSQL database
 
 bs-odm supports mongodb out of the box. You can directly connect to the database by calling the appropriate functions on the global DB object:
