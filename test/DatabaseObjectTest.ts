@@ -91,6 +91,24 @@ describe('DatabaseObject', function(){
 
     });
 
+    it('save() ignore undefined', async function(){
+        class Test extends DatabaseObject {
+            name: string;
+            undefined: string;
+        }
+
+        const test = new Test();
+        test.name = "name";
+        test.undefined = undefined;
+        await test.save();
+
+        const res = await Test.findOne({name: "name"});
+
+        delete res._id;
+
+        assert.deepEqual(res, {name: "name"} as any);
+    });
+
     it('updateMany', async function(){
         let obj = new DBObject({
                 number: 1001,

@@ -85,7 +85,7 @@ export class _DB extends EventEmitter {
 
             const url = "mongodb://" + pwd + server + authSource;
 
-            this.client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true } );
+            this.client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true, ignoreUndefined: true } );
             this.db = await this.client.db(db);
             this.stateConnecting = false;
             this.emit("connected", this);
