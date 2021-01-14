@@ -4,8 +4,8 @@ import {assert} from "chai";
 import {DbObj} from "./classes/DbObj";
 
 const MONGO = process.env.MONGO_URL ?
-    process.env.MONGO_URL + "bs-mongo-mapper-test" :
-    "mongodb://localhost:27017/bs-mongo-mapper-test";
+    process.env.MONGO_URL + "bs-odm-test" :
+    "mongodb://localhost:27017/bs-odm-test";
 
 const URI = MONGO;
 

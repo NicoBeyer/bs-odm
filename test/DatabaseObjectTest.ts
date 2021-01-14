@@ -2,8 +2,8 @@ import { assert } from 'chai'
 import {DB, DatabaseObject} from '../src'
 
 const MONGO = process.env.MONGO_URL ?
-    process.env.MONGO_URL + "test_bs-mongo-mapper" :
-    "mongodb://localhost:27017/test_bs-mongo-mapper";
+    process.env.MONGO_URL + "/bs-odm-test" :
+    "mongodb://localhost:27017/bs-odm-test";
 
 describe('DatabaseObject', function(){
 
@@ -45,7 +45,7 @@ describe('DatabaseObject', function(){
                 string: 'Some silly test string 1',
                 object: {name: 'Hello1', value: 'World1'},
                 array: ['one1', 'two1', 'three1'],
-                arrayarray: [['one1', 'two1', 'three1'],['one1', 'two1', 'three1'],['one1', 'two1', 'three1']]
+                arrayarray: [['one1', 'two1', 'three1'],['one1', 'two1', 'three1'],['one1', 'two1', 'three1']],
             }),
             obj2 = new DBObject({
                 number: 1002,
@@ -95,18 +95,51 @@ describe('DatabaseObject', function(){
         class Test extends DatabaseObject {
             name: string;
             undefined: string;
+            objWithUndefined: any;
+            array: any[];
         }
 
         const test = new Test();
         test.name = "name";
         test.undefined = undefined;
+        test.objWithUndefined = {
+            value: "Value",
+            undefined: undefined
+        };
+        test.array = [
+            {obj: {undefined: undefined}}
+        ]
         await test.save();
 
         const res = await Test.findOne({name: "name"});
 
         delete res._id;
 
-        assert.deepEqual(res, {name: "name"} as any);
+        assert.deepEqual(res, {name: "name", objWithUndefined: {value: "Value"}, array: [{obj: {}}] } as any);
+    });
+
+    it('save() with empty array', async function(){
+        class Test extends DatabaseObject {
+            name = "Name";
+            emptyArray = [];
+            obj: any;
+        }
+
+        const test = new Test();
+        test.obj = {
+            emptyArray: []
+        };
+        await test.save();
+
+        let res = await Test.findOne({name: "Name"});
+        delete res._id;
+        assert.deepEqual(res, {name: "Name", emptyArray: [], obj: {emptyArray: []}} as any);
+
+        await test.save({emptyArray: 1, "obj.emptyArray": 1});
+
+        res = await Test.findOne({name: "Name"});
+        delete res._id;
+        assert.deepEqual(res, {name: "Name", emptyArray: [], obj: {emptyArray: []}} as any);
     });
 
     it('updateMany', async function(){

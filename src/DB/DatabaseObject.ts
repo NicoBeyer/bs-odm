@@ -142,7 +142,7 @@ export abstract class DatabaseObject {
                     }
                 }
             }else if(fields[key]){
-                ret[key] = source[key]
+                ret[key] = _.get(source, key)
             }
         }
 

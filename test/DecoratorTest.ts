@@ -8,8 +8,8 @@ const assert = chai.assert;
 chai.should();
 
 const MONGO = process.env.MONGO_URL ?
-    process.env.MONGO_URL + "test_MongoDB" :
-    "mongodb://localhost:27017/test_MongoDB";
+    process.env.MONGO_URL + "bs-odm-test" :
+    "mongodb://localhost:27017/bs-odm-test";;
 
 describe("Decorators", async function() {
 
