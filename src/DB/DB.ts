@@ -62,7 +62,7 @@ export class _DB extends EventEmitter {
         this.emit("connected", this);
     }
 
-    public async mongoConnect(uri:string, user?:string, password?:string, authSource = "admin", reconnect = false)  {
+    public async mongoConnect(uri:string, user?:string, password?:string, authSource?: string, reconnect = false)  {
 
         if ((!this.isConnected() || reconnect) && !this.stateConnecting) {
             this.emit("connecting", this);
