@@ -83,7 +83,7 @@ export class _DB extends EventEmitter {
                 auth = "?authSource=" + authSource;
             }
 
-            const url = "mongodb://" + pwd + server + authSource;
+            const url = "mongodb://" + pwd + server + auth;
 
             this.client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true, ignoreUndefined: true } );
             this.db = await this.client.db(db);
