@@ -322,12 +322,13 @@ export abstract class DatabaseObject {
         const Class = (this as any) as (hasCollection & Decoratable);
         if (!Class.collection) {
             Class.collection = await DB.collection(Class.getCollectionName());
-            DB.addListener(DB.EVENT_DISCONNECTED, () => {
+            const listener = function() {
                 delete Class.collection;
-            });
-            DB.addListener(DB.EVENT_CONNECTED, () => {
-                delete Class.collection;
-            });
+                DB.removeListener(DB.EVENT_DISCONNECTED, listener);
+                DB.removeListener(DB.EVENT_CONNECTED, listener);
+            };
+            DB.addListener(DB.EVENT_DISCONNECTED, listener);
+            DB.addListener(DB.EVENT_CONNECTED, listener);
         }
         return Class.collection;
     }

@@ -1,4 +1,4 @@
-import {DatabaseObject, DB as OdmDb} from "../src";
+import {DatabaseObject, DB, DB as OdmDb} from "../src";
 import {MongoClient} from "mongodb";
 import {assert} from "chai";
 import {DbObj} from "./classes/DbObj";

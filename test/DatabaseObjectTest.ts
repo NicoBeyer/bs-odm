@@ -1,5 +1,6 @@
 import { assert } from 'chai'
 import {DB, DatabaseObject} from '../src'
+import * as Bluebird from "bluebird";
 
 const MONGO = process.env.MONGO_URL ?
     process.env.MONGO_URL + "/bs-odm-test" :
@@ -312,6 +313,33 @@ describe('DatabaseObject', function(){
         const res1 = await TestClass.find<TestClass>({"object.name": "skips results in find"}, {skip: 5, limit: 1});
         assert.equal(res1.length, 1);
         assert.equal(res1[0].object.value, "Value 6");
+
+    });
+
+    it("removes listeners on disconnect and connect", async function(){
+        this.timeout(3000);
+
+        class Test1 extends DatabaseObject {}
+        class Test2 extends DatabaseObject {}
+        class Test3 extends DatabaseObject {}
+
+        await DB.mongoConnect(MONGO);
+
+        const test1 = new Test1();
+        const test2 = new Test2();
+        const test3 = new Test3();
+        await test1.save();
+        await test2.save();
+        await test3.save();
+
+        assert.equal(DB.listenerCount(DB.EVENT_DISCONNECTED), 3);
+        assert.equal(DB.listenerCount(DB.EVENT_CONNECTED), 3);
+
+        await DB.disconnect();
+        await Bluebird.delay(10);
+
+        assert.equal(DB.listenerCount(DB.EVENT_DISCONNECTED), 0);
+        assert.equal(DB.listenerCount(DB.EVENT_CONNECTED), 0);
 
     });
 
