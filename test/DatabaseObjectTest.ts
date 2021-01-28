@@ -319,6 +319,8 @@ describe('DatabaseObject', function(){
     it("removes listeners on disconnect and connect", async function(){
         this.timeout(3000);
 
+        await DB.disconnect();
+
         class Test1 extends DatabaseObject {}
         class Test2 extends DatabaseObject {}
         class Test3 extends DatabaseObject {}
@@ -341,6 +343,7 @@ describe('DatabaseObject', function(){
         assert.equal(DB.listenerCount(DB.EVENT_DISCONNECTED), 0);
         assert.equal(DB.listenerCount(DB.EVENT_CONNECTED), 0);
 
+        await DB.mongoConnect(MONGO);
     });
 
     class SubClass {
