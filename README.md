@@ -182,3 +182,7 @@ If you want to have more control over the connection you can bring your own clie
 Those don't have to be MongoDb, als long as the objects satisfy the MongoLikeClient or MongoLikeDb interface contracts,
 you can bring whichever database backend you like.
 
+## Locking
+
+It is possible to lock documents to make sure that concurrent 
+

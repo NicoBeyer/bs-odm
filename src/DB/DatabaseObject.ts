@@ -1,7 +1,8 @@
 import {DB, MongoLikeCollection} from './DB'
 import {FindOneAndReplaceOption, ObjectId} from "mongodb";
 import * as _ from "lodash";
-import {Decoratable} from "./Decorators";
+import {Decoratable, LockOptions, OdmLock} from "./Decorators";
+import {v4 as uuidv4} from "uuid";
 
 export interface IInstantiatable {
     instantiate<Type extends DatabaseObject>(obj:any):Type;
@@ -20,7 +21,8 @@ export interface hasCollection {
 
 export abstract class DatabaseObject {
 
-    public _id:any
+    public _id:any;
+    public _odmLock: OdmLock;
 
     static async find<Type extends DatabaseObject>(selector = {} as any, options = {} as QueryOptions):Promise<Type[]>{
         let ret = [] as Type[]
@@ -33,13 +35,16 @@ export abstract class DatabaseObject {
 
     static async findOne<Type extends DatabaseObject>(selector = {} as any):Promise<Type>{
         const coll = await this._getCollection();
+
         let obj = await coll.findOne(selector)
 
         if(!obj){
             return null
         }
 
-        return this.instantiate<Type>(obj)
+        delete obj._odmLock;
+        const ret = this.instantiate<Type>(obj);
+        return ret;
     }
 
     static async findEach<Type extends DatabaseObject>(
@@ -73,6 +78,7 @@ export abstract class DatabaseObject {
                     if(hasNext){
                         let next = await cur.next();
                         let obj = self.instantiate<Type>(next)
+                        delete obj._odmLock;
                         let ret = iterator(obj)
                         promises.push(ret)
                     }else{
@@ -96,6 +102,10 @@ export abstract class DatabaseObject {
     }
 
     async save(fields?: any): Promise<this> {
+        if (this.isLockable() && !this._odmLock && this._id) {
+            throw new Error("This document is protected by a lock. You should acquire a lock before updating.");
+        }
+
         let coll = await this.getCollection();
 
         let obj = DatabaseObject.pickFields(this);
@@ -220,7 +230,6 @@ export abstract class DatabaseObject {
                 throw new Error("Update object contains fields not defined for " + this.name +
                     " " + JSON.stringify(_.difference(objectKeys, Class.fields)));
             }
-
         } else if (Class.excludedFields && Class.excludedFields.length > 0) {
             const intersection = _.intersection(objectKeys, Class.excludedFields);
             if (intersection.length !== 0) {
@@ -313,9 +322,19 @@ export abstract class DatabaseObject {
         return Class._getCollection();
     }
 
+    private isLockable(): LockOptions | boolean {
+        const Class = this.constructor as any;
+        return Class.getLockOptions() || false;
+    }
+
     public static getCollectionName(): string {
         const Class = (this as any) as Decoratable;
         return Class.collectionName || (Class.collectionName = this.name.toLocaleLowerCase() + "s");
+    }
+
+    public static getLockOptions(): LockOptions {
+        const Class = (this as any) as Decoratable;
+        return Class._odmLockable;
     }
 
     private static async _getCollection(): Promise<MongoLikeCollection> {
@@ -331,6 +350,46 @@ export abstract class DatabaseObject {
             DB.addListener(DB.EVENT_CONNECTED, listener);
         }
         return Class.collection;
+    }
+
+    public async lock(ttlMillis?: number) {
+        const _odmLock = {
+            uuid: _.get(this, "_odmLock.uuid") || uuidv4(),
+            timestamp: Date.now()
+        } as OdmLock;
+        const lockOptions = this.isLockable() as unknown as LockOptions;
+        const ttl = ttlMillis || _.get(lockOptions, "ttlMillis") || -1;
+        const timeout = ttl > 0 ? Date.now() - ttl : -1;
+
+        const selector = {
+            _id: this._id,
+            $or: [
+                {_odmLock: null},
+                {"_odmLock.timestamp": {$lt: timeout}}
+            ]
+        } as any;
+
+        const coll = await this.getCollection();
+        const result = await coll.findOneAndUpdate(selector,
+            {$set: {
+                _odmLock
+            }}, {returnOriginal: false});
+
+        if (!result.value) {
+            throw new Error("Setting lock on document failed.");
+        }
+
+        this._odmLock = result.value._odmLock;
+        return this;
+    }
+
+    public async releaseLock() {
+        const coll = await this.getCollection();
+        const ret = await coll.findOneAndUpdate({_id: this._id, "_odmLock.uuid": this._odmLock.uuid},
+            {$unset: {
+                 _odmLock: ""
+            }});
+        delete this._odmLock;
     }
 
 }

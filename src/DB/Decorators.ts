@@ -5,6 +5,16 @@ export interface Decoratable {
     excludedFields: string[];
     typedFields: any;
     collectionName: string;
+    _odmLockable?: LockOptions;
+}
+
+export interface LockOptions {
+    ttlMillis: number;
+}
+
+export interface OdmLock {
+    uuid: string;
+    timestamp: number;
 }
 
 export function field(type?: any) {
@@ -34,6 +44,13 @@ export function collection(name?: string) {
     return function (constructor: Function) {
         const  Class= ((constructor as any) as Decoratable & hasCollection);
         Class.collectionName = name || Class.getCollectionName();
+    }
+}
+
+export function lockable(ttlMillis = 1000) {
+    return function (constructor: Function) {
+        const Class= ((constructor as any) as Decoratable & hasCollection);
+        Class._odmLockable = {ttlMillis};
     }
 }
 
