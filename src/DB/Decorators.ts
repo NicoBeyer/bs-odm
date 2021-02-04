@@ -14,7 +14,7 @@ export interface LockOptions {
 
 export interface OdmLock {
     uuid: string;
-    timestamp: number;
+    timeout: number;
 }
 
 export function field(type?: any) {

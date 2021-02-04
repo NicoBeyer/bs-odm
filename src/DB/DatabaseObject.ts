@@ -1,7 +1,7 @@
 import {DB, MongoLikeCollection} from './DB'
 import {FindOneAndReplaceOption, ObjectId} from "mongodb";
 import * as _ from "lodash";
-import {Decoratable, LockOptions, OdmLock} from "./Decorators";
+import {Decoratable, exclude, LockOptions, OdmLock} from "./Decorators";
 import {v4 as uuidv4} from "uuid";
 
 export interface IInstantiatable {
@@ -22,6 +22,7 @@ export interface hasCollection {
 export abstract class DatabaseObject {
 
     public _id:any;
+    private _odmIsNew = true;
     public _odmLock: OdmLock;
 
     static async find<Type extends DatabaseObject>(selector = {} as any, options = {} as QueryOptions):Promise<Type[]>{
@@ -77,8 +78,7 @@ export abstract class DatabaseObject {
                     let hasNext = await cur.hasNext();
                     if(hasNext){
                         let next = await cur.next();
-                        let obj = self.instantiate<Type>(next)
-                        delete obj._odmLock;
+                        let obj = self.instantiate<Type>(next);
                         let ret = iterator(obj)
                         promises.push(ret)
                     }else{
@@ -102,13 +102,11 @@ export abstract class DatabaseObject {
     }
 
     async save(fields?: any): Promise<this> {
-        if (this.isLockable() && !this._odmLock && this._id) {
-            throw new Error("This document is protected by a lock. You should acquire a lock before updating.");
-        }
-
         let coll = await this.getCollection();
 
         let obj = DatabaseObject.pickFields(this);
+        delete obj._odmLock;
+        delete obj._odmIsNew;
 
         if(fields){
             obj = DatabaseObject.copyFields(fields, obj)
@@ -121,19 +119,31 @@ export abstract class DatabaseObject {
             if (!this._id) {
                 throw new Error('To update or upsert a document an _id is required');
             }
+            const filter = {_id: this._id} as any;
+            if (this.isLockable()) {
+                filter.$or = [
+                    {_odmLock: null},
+                    {"_odmLock.uuid": _.get(this, "_odmLock.uuid")},
+                    {"_odmLock.timeout": {$lt: Date.now()}},
+                ];
+            }
             let result = await coll.findOneAndUpdate(
-                {_id: this._id},
+                filter,
                 {$set: obj},
                 {
-                    upsert:true,
                     returnOriginal: false
                 });
 
-            Object.assign(this, result);
+            if (!result.value) {
+                throw new Error("Unable to save document.");
+            }
 
-            this.updateFields()
+            Object.assign(this, result.value);
+
+            this.updateFields();
         }
 
+        delete this._odmIsNew;
         return this;
     }
 
@@ -298,15 +308,16 @@ export abstract class DatabaseObject {
         await coll.deleteMany(filter);
     }
 
-    isNew(){
-        return typeof this._id === 'undefined'
+    public isNew(){
+        return typeof this._id === 'undefined' || this._odmIsNew;
     }
 
-    public static instantiate<Type extends DatabaseObject>(obj: any):Type{
+    protected static instantiate<Type extends DatabaseObject>(obj: any):Type{
         let self = <any>this;
         let Class = (this.constructor as any) as Decoratable;
 
-        let ret = new self()
+        let ret = new self();
+        delete ret._odmIsNew;
         if (Class.fields) {
             Object.assign(ret, + _.pick(obj, Class.fields));
         } else {
@@ -353,19 +364,20 @@ export abstract class DatabaseObject {
     }
 
     public async lock(ttlMillis?: number) {
+        const lockOptions = this.isLockable();
+
+        const ttl = ttlMillis || _.get(lockOptions, "ttlMillis") || 1000;
+        const timeout = ttl === -1 ? Number.MAX_SAFE_INTEGER : Date.now() + ttl;
         const _odmLock = {
             uuid: _.get(this, "_odmLock.uuid") || uuidv4(),
-            timestamp: Date.now()
+            timeout: timeout
         } as OdmLock;
-        const lockOptions = this.isLockable() as unknown as LockOptions;
-        const ttl = ttlMillis || _.get(lockOptions, "ttlMillis") || -1;
-        const timeout = ttl > 0 ? Date.now() - ttl : -1;
 
         const selector = {
             _id: this._id,
             $or: [
                 {_odmLock: null},
-                {"_odmLock.timestamp": {$lt: timeout}}
+                {"_odmLock.timestamp": {$lt: Date.now()}}
             ]
         } as any;
 

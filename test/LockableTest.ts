@@ -1,6 +1,7 @@
 import {assert} from "chai";
 import {DB} from "../src";
 import {LockableObj} from "./classes/LockableObj";
+import * as Bluebird from "bluebird";
 
 describe("LockableTest", async function () {
 
@@ -31,25 +32,18 @@ describe("LockableTest", async function () {
         const lockable = new LockableObj("Test1");
         await lockable.save();
 
-        try {
-            lockable.value = "Test2";
-            await lockable.save();
-            assert.fail("An Error should have been thrown.");
-        } catch (err) {
-            assert.equal(err.message, "This document is protected by a lock. You should acquire a lock before updating.");
-        }
-
         await lockable.lock();
-        assert.exists(lockable._odmLock);
-        assert.exists(lockable._odmLock.uuid);
-        assert.exists(lockable._odmLock.timestamp);
         await lockable.save();
 
-        console.log(lockable._id);
         const lockable2 = await LockableObj.findOne<LockableObj>({_id: lockable._id});
+        lockable2.value = "lockable2.save()";
 
-        assert.isUndefined(lockable2._odmLock);
-
+        try {
+            await lockable2.save();
+            assert.fail("An Error should have been thrown.");
+        } catch (err) {
+            assert.equal(err.message, "Unable to save document.");
+        }
         try {
             await lockable2.lock();
             assert.fail("An Error should have been thrown.");
@@ -62,7 +56,6 @@ describe("LockableTest", async function () {
         const lockableObj = await coll.findOne({_id: lockable._id});
         assert.isUndefined(lockableObj._odmLock);
 
-        lockable2.value = "lockable2.save()";
         await lockable2.lock();
         await lockable2.save();
         await lockable2.releaseLock();
@@ -72,6 +65,30 @@ describe("LockableTest", async function () {
         const obj = objs[0];
         delete obj._id;
         assert.deepEqual(obj, {value: "lockable2.save()"});
+    });
+
+    it("lock timeout", async function() {
+        const coll = await DB.collection("lockables");
+
+        const lockable = new LockableObj("Test1");
+        await lockable.save();
+        const lockable2 = await LockableObj.findOne<LockableObj>({_id: lockable._id});
+        lockable2.value = "lockable2.save()";
+
+        await lockable.lock(50);
+
+        try {
+            await lockable2.save();
+            assert.fail("An Error should have been thrown.");
+        } catch (err) {
+            assert.equal(err.message, "Unable to save document.");
+        }
+
+        await Bluebird.delay(55);
+
+        await lockable2.save();
+
+
     });
 
 

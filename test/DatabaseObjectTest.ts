@@ -65,6 +65,9 @@ describe('DatabaseObject', function(){
         await obj.save();
         await obj2.save();
         await obj3.save();
+        assert.isUndefined((obj as any).value);
+        assert.isUndefined((obj2 as any).value);
+        assert.isUndefined((obj3 as any).value);
 
         let ret1 = await DBObject.findOne<DBObject>({number:1001});
 
@@ -137,6 +140,7 @@ describe('DatabaseObject', function(){
         assert.deepEqual(res, {name: "Name", emptyArray: [], obj: {emptyArray: []}} as any);
 
         await test.save({emptyArray: 1, "obj.emptyArray": 1});
+        assert.isUndefined((test as any).value);
 
         res = await Test.findOne({name: "Name"});
         delete res._id;
@@ -439,17 +443,22 @@ describe('DatabaseObject', function(){
 
     it('save() on manually created id', async function(){
 
-        const object = DBObjectStringId.instantiate({_id: "test1", value: "value1"});
+        const object = new DBObjectStringId({_id: "test1", value: "value1"});
 
         await object.save();
 
-        const object2 = DBObjectStringId.instantiate({_id: "test1", value: "value2"});
+        const object2 = new DBObjectStringId({_id: "test2", value: "value2"});
 
         await object2.save();
 
         const res = await DBObjectStringId.find<DBObjectStringId>({});
 
-        console.log(res);
+        assert.lengthOf(res, 2);
+        res.sort((a,b) => {
+            return a._id === b._id ? 0 : (a._id > b._id ? 1 : -1);
+        });
+        assert.deepEqual(res[0], object);
+        assert.deepEqual(res[1], object2);
 
     });
 
@@ -528,6 +537,12 @@ class DBObjectStringId extends DatabaseObject {
 
     static getCollectionName(){
         return 'DBObjectStringId'
+    }
+
+    public constructor(obj: any) {
+        super();
+
+        Object.assign(this, obj);
     }
 
 }
