@@ -211,7 +211,7 @@ export abstract class DatabaseObject {
         if(result.value){
             return this.instantiate<Type>(result.value)
         }else{
-            return null
+            return null;
         }
     }
 
@@ -402,6 +402,10 @@ export abstract class DatabaseObject {
                  _odmLock: ""
             }});
         delete this._odmLock;
+    }
+
+    public getPLainOldObject() {
+        return _.omit(this, "_id", "_odmIsNew", "_odmLock");
     }
 
 }
