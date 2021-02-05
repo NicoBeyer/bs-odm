@@ -33,6 +33,8 @@ describe("LockableTest", async function () {
         await lockable.save();
 
         await lockable.lock();
+
+        lockable.value = "test2.save()";
         await lockable.save();
 
         const lockable2 = await LockableObj.findOne<LockableObj>({_id: lockable._id});

@@ -123,9 +123,11 @@ export abstract class DatabaseObject {
             if (this.isLockable()) {
                 filter.$or = [
                     {_odmLock: null},
-                    {"_odmLock.uuid": _.get(this, "_odmLock.uuid")},
                     {"_odmLock.timeout": {$lt: Date.now()}},
                 ];
+                if (this._odmLock && this._odmLock.uuid) {
+                    filter.$or.push({"_odmLock.uuid": _.get(this, "_odmLock.uuid")});
+                }
             }
             let result = await coll.findOneAndUpdate(
                 filter,

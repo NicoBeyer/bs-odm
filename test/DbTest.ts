@@ -90,6 +90,15 @@ describe("DB", async function(){
         }
 
         await OdmDb.disconnect();
+
+        await OdmDb.mongoConnect(URI.replace("bs-odm-test", "bs-mongo-mapper-test"));
+
+        const collections2 = await OdmDb.collections();
+        for(const coll of collections2) {
+            await coll.deleteMany({});
+        }
+
+        await OdmDb.disconnect();
     });
 
 });
