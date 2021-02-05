@@ -406,7 +406,7 @@ export abstract class DatabaseObject {
         delete this._odmLock;
     }
 
-    public getPLainOldObject() {
+    public getPlainOldObject() {
         return _.omit(this, "_id", "_odmIsNew", "_odmLock");
     }
 
