@@ -500,6 +500,22 @@ describe('DatabaseObject', function(){
         assert.isNull(res);
     });
 
+    it('getPlainOldObject', async function() {
+
+        const values = {
+            number: 40000,
+            string: 'Some silly test string 1',
+            object: {name: 'Hello1', value: 'World1'},
+            array: ['one1', 'two1', 'three1'],
+            arrayarray: [['one1', 'two1', 'three1'], ['one1', 'two1', 'three1'], ['one1', 'two1', 'three1']]
+        };
+        const dbObj = new DBObject(values);
+
+        const obj = dbObj.getPlainOldObject();
+
+        assert.deepEqual(obj, values);
+    });
+
 });
 
 class DBObject extends DatabaseObject implements TestValues {

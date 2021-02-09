@@ -186,3 +186,14 @@ you can bring whichever database backend you like.
 
 It is possible to lock documents to make sure that concurrent 
 
+## Enhanced Filter Query
+
+Since _DatabaseObject_ ist hiding most of the database features, the FilterQuery for the selectors is enhanced to provide often needed functionality.
+
+### Query $min and $max values
+
+This is equivalent to doing 
+
+    obj.findOne({numValue: {$max: 1}}); // finds the document with the max value of numValue
+    obj.findOne({numValue: {$min: 1}}); // finds the document with the min value of numValue
+

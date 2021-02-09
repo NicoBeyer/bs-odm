@@ -3,6 +3,7 @@ import {FindOneAndReplaceOption, ObjectId} from "mongodb";
 import * as _ from "lodash";
 import {Decoratable, exclude, LockOptions, OdmLock} from "./Decorators";
 import {v4 as uuidv4} from "uuid";
+import {EnhancedFilterQuery} from "../selector/EnhancedFilterQuery";
 
 export interface IInstantiatable {
     instantiate<Type extends DatabaseObject>(obj:any):Type;
@@ -37,7 +38,7 @@ export abstract class DatabaseObject {
     static async findOne<Type extends DatabaseObject>(selector = {} as any):Promise<Type>{
         const coll = await this._getCollection();
 
-        let obj = await coll.findOne(selector)
+        const obj = await EnhancedFilterQuery.findOne(coll, selector);
 
         if(!obj){
             return null
@@ -406,8 +407,8 @@ export abstract class DatabaseObject {
         delete this._odmLock;
     }
 
-    public getPlainOldObject() {
-        return _.omit(this, "_id", "_odmIsNew", "_odmLock");
+    public getPlainOldObject<T extends object>(): T {
+        return _.omit(this, "_id", "_odmIsNew", "_odmLock") as T;
     }
 
 }
