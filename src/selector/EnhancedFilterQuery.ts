@@ -11,9 +11,9 @@ export class EnhancedFilterQuery {
         };
 
         _.forEach(filterQuery, (value, key) => {
-            if (value.$max) {
+            if (value && value.$max) {
                 ret.sortQuery[key] = -1;
-            } else if (value.$min) {
+            } else if (value && value.$min) {
                 ret.sortQuery[key] = 1;
             } else {
                 ret.filterQuery[key] = filterQuery[key];
