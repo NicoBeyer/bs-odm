@@ -314,7 +314,7 @@ export abstract class DatabaseObject {
     }
 
     public isNew(){
-        return typeof this._id === 'undefined' || this._odmIsNew;
+        return _.isNil(this._id) || this._odmIsNew;
     }
 
     protected static instantiate<Type extends DatabaseObject>(obj: any):Type{
