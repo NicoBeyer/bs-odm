@@ -173,7 +173,9 @@ export abstract class DatabaseObject {
     }
 
     private static pickFields(obj: any): any {
-        if (Array.isArray(obj)) {
+        if (!obj) {
+            return obj;
+        } else if (Array.isArray(obj)) {
             return obj.map(o => this.pickFields(o));
         } else if (typeof obj === "object") {
             const Class = (obj.constructor as any) as Decoratable;

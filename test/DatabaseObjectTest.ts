@@ -1,6 +1,7 @@
 import { assert } from 'chai'
 import {DB, DatabaseObject} from '../src'
 import * as Bluebird from "bluebird";
+import * as _ from "lodash";
 
 const MONGO = process.env.MONGO_URL ?
     process.env.MONGO_URL + "/bs-odm-test" :
@@ -462,6 +463,24 @@ describe('DatabaseObject', function(){
 
     });
 
+    it ("save() with all different types", async function() {
+        const obj = new DBObject({
+            number: 40045,
+            string: 'Some silly test string 1',
+            object: {name: 'Hello1', value: 'World1'},
+            array: ['one1', 'two1', 'three1'],
+            arrayarray: [['one1', 'two1', 'three1'],['one1', 'two1', 'three1'],['one1', 'two1', 'three1']],
+            null: null,
+            undefined: undefined
+        });
+
+        await obj.save();
+
+        const res = await DBObject.findOne<DBObject>({number: 40045});
+
+        console.log(res.getPlainOldObject());
+    });
+
     it('it counts objects', async function(){
 
         const obj = new DBObject({
@@ -526,17 +545,15 @@ class DBObject extends DatabaseObject implements TestValues {
     array: Array<string>;
     arrayarray: Array<Array<string>>;
     update: boolean;
+    null: null;
+    undefined: undefined;
 
     constructor(values?:TestValues){
         super();
 
-        if(values){
-            this.number = values.number;
-            this.string = values.string;
-            this.object = values.object;
-            this.array = values.array;
-            this.arrayarray = values.arrayarray
-        }
+        _.each(values, (v, k) => {
+            this[k] = v;
+        });
 
     }
 
@@ -569,7 +586,9 @@ interface TestValues {
     string: string
     object: any
     array: Array<string>
-    arrayarray: Array<Array<string>>
+    arrayarray: Array<Array<string>>,
+    null?: null,
+    undefined?: undefined
 
 }
 
