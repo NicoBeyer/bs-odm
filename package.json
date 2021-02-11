@@ -1,6 +1,6 @@
 {
   "name": "bs-odm",
-  "version": "1.0.23",
+  "version": "1.0.24",
   "description": "Object oriented Mongodb Mapper",
   "main": "lib/src/index.js",
   "typings": "lib/src/index",
