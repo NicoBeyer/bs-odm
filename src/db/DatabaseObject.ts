@@ -402,6 +402,9 @@ export abstract class DatabaseObject {
 
     public async releaseLock() {
         const coll = await this.getCollection();
+        if (!this._odmLock) {
+            return;
+        }
         const ret = await coll.findOneAndUpdate({_id: this._id, "_odmLock.uuid": this._odmLock.uuid},
             {$unset: {
                  _odmLock: ""

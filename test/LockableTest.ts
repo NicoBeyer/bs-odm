@@ -69,6 +69,13 @@ describe("LockableTest", async function () {
         assert.deepEqual(obj, {value: "lockable2.save()"});
     });
 
+    it("releaseLock() with no lock present returns", async function() {
+        const lockable = new LockableObj("Test1");
+        await lockable.save();
+
+        await lockable.releaseLock();
+    })
+
     it("lock timeout", async function() {
         const coll = await DB.collection("lockables");
 
