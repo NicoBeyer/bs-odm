@@ -400,7 +400,7 @@ export abstract class DatabaseObject {
         return this;
     }
 
-    public async releaseLock() {
+    public async releaseLock(): Promise<this> {
         const coll = await this.getCollection();
         if (!this._odmLock) {
             return;
@@ -410,6 +410,8 @@ export abstract class DatabaseObject {
                  _odmLock: ""
             }});
         delete this._odmLock;
+
+        return this;
     }
 
     public getPlainOldObject<T extends object>(): T {
