@@ -1,7 +1,7 @@
 import {DB, MongoLikeCollection} from './DB'
 import {FindOneAndReplaceOption, ObjectId} from "mongodb";
 import * as _ from "lodash";
-import {Decoratable, exclude, LockOptions, OdmLock} from "./Decorators";
+import {Decoratable, LockOptions, OdmLock} from "./Decorators";
 import {v4 as uuidv4} from "uuid";
 import {EnhancedFilterQuery} from "../selector/EnhancedFilterQuery";
 
@@ -317,11 +317,11 @@ export abstract class DatabaseObject {
         return _.isNil(this._id) || this._odmIsNew;
     }
 
-    public static instantiate<Type extends DatabaseObject>(obj: any):Type{
-        let self = <any>this;
-        let Class = (this.constructor as any) as Decoratable;
+    public static instantiate<Type extends DatabaseObject>(obj: any, ctor?: new () => Type): Type{
+        let self = ctor || <any>this;
 
         let ret = new self();
+        let Class = ret.constructor as Decoratable;
         delete ret._odmIsNew;
         if (Class.fields) {
             Object.assign(ret, + _.pick(obj, Class.fields));

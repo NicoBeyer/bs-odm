@@ -535,6 +535,28 @@ describe('DatabaseObject', function(){
         assert.deepEqual(obj, values);
     });
 
+    it('instantiate with constructor', async function(){
+
+        interface BaseInterface {
+            value : string;
+        }
+        interface TestObjectInterface extends BaseInterface {
+            value2 : string;
+        }
+        class TestObject<T extends BaseInterface = BaseInterface> extends DatabaseObject {
+            public static instantiate<T extends BaseInterface = BaseInterface>(obj: T): TestObject<T> & T {
+                return DatabaseObject.instantiate<TestObject<T>>(obj, TestObject) as TestObject<T> & T;
+            }
+        }
+
+        const obj = TestObject.instantiate<TestObjectInterface>({value: "Hello", value2: "World"});
+
+        assert.instanceOf(obj, TestObject);
+        assert.equal(obj.value, "Hello");
+        assert.equal(obj.value2, "World");
+
+    });
+
 });
 
 class DBObject extends DatabaseObject implements TestValues {
