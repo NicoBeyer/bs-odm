@@ -5,10 +5,6 @@ import {Decoratable, LockOptions, OdmLock} from "./Decorators";
 import {v4 as uuidv4} from "uuid";
 import {EnhancedFilterQuery} from "../selector/EnhancedFilterQuery";
 
-export interface IInstantiatable {
-    instantiate<Type extends DatabaseObject>(obj:any):Type;
-}
-
 export interface QueryOptions {
     skip?: number;
     limit?: number;
@@ -45,7 +41,7 @@ export abstract class DatabaseObject {
         }
 
         delete obj._odmLock;
-        const ret = this.instantiate<Type>(obj);
+        const ret = this._instantiate<Type>(obj);
         return ret;
     }
 
@@ -79,7 +75,7 @@ export abstract class DatabaseObject {
                     let hasNext = await cur.hasNext();
                     if(hasNext){
                         let next = await cur.next();
-                        let obj = self.instantiate<Type>(next);
+                        let obj = self._instantiate<Type>(next);
                         let ret = iterator(obj)
                         promises.push(ret)
                     }else{
@@ -214,7 +210,7 @@ export abstract class DatabaseObject {
         let result = await coll.findOneAndUpdate(filter, update, options)
 
         if(result.value){
-            return this.instantiate<Type>(result.value)
+            return this._instantiate<Type>(result.value)
         }else{
             return null;
         }
@@ -272,7 +268,7 @@ export abstract class DatabaseObject {
     }
 
     /**
-     * Overwrite to instantiate properties
+     * Overwrite to _instantiate properties
      * @returns {Type}
      */
     protected updateFields<Type extends DatabaseObject>():Type {
@@ -292,8 +288,8 @@ export abstract class DatabaseObject {
     private updateField(key: string, Type: any) {
         let self = <any>this;
 
-        if (Type.instantiate) {
-            self[key] = Type.instantiate(self[key]);
+        if (Type._instantiate) {
+            self[key] = Type._instantiate(self[key]);
         } else {
             self[key] = new Type(self[key]);
         }
@@ -317,14 +313,14 @@ export abstract class DatabaseObject {
         return _.isNil(this._id) || this._odmIsNew;
     }
 
-    public static instantiate<Type extends DatabaseObject>(obj: any, ctor?: new () => Type): Type{
+    protected static _instantiate<Type extends DatabaseObject>(obj: Partial<Type>, ctor?: new () => Type): Type {
         let self = ctor || <any>this;
 
         let ret = new self();
         let Class = ret.constructor as Decoratable;
         delete ret._odmIsNew;
         if (Class.fields) {
-            Object.assign(ret, + _.pick(obj, Class.fields));
+            Object.assign(ret, _.pick(obj, Class.fields));
         } else {
             Object.assign(ret, obj)
         }

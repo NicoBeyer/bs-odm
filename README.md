@@ -107,7 +107,7 @@ As an alternative the Type can implement the static method _instantiate_ to take
         } 
         
         // Option 2
-        public static instantiate(obj: {property: string}) {
+        public static _instantiate(obj: {property: string}) {
             return new SubDocument(obj);
         }
     }

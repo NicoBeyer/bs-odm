@@ -535,7 +535,7 @@ describe('DatabaseObject', function(){
         assert.deepEqual(obj, values);
     });
 
-    it('instantiate with constructor', async function(){
+    it('_instantiate with constructor', async function(){
 
         interface BaseInterface {
             value : string;
@@ -545,7 +545,7 @@ describe('DatabaseObject', function(){
         }
         class TestObject<T extends BaseInterface = BaseInterface> extends DatabaseObject {
             public static instantiate<T extends BaseInterface = BaseInterface>(obj: T): TestObject<T> & T {
-                return DatabaseObject.instantiate<TestObject<T>>(obj, TestObject) as TestObject<T> & T;
+                return DatabaseObject._instantiate<TestObject<T>>(obj as Partial<TestObject<T>>, TestObject) as TestObject<T> & T;
             }
         }
 
