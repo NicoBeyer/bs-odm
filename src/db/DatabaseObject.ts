@@ -317,7 +317,7 @@ export abstract class DatabaseObject {
         return _.isNil(this._id) || this._odmIsNew;
     }
 
-    protected static instantiate<Type extends DatabaseObject>(obj: any):Type{
+    public static instantiate<Type extends DatabaseObject>(obj: any):Type{
         let self = <any>this;
         let Class = (this.constructor as any) as Decoratable;
 
