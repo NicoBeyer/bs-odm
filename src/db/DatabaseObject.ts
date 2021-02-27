@@ -140,7 +140,8 @@ export abstract class DatabaseObject {
                     update: {$set: obj},
                     options: {
                         returnOriginal: false
-                    }
+                    },
+                    result
                 }));
             }
 
@@ -186,7 +187,7 @@ export abstract class DatabaseObject {
                 return obj;
             } else if (obj instanceof ObjectId) {
                 return obj;
-            }else if (Class.fields) {
+            } else if (Class.fields) {
                 return this.pickFields(_.pick(obj, Class.fields));
             } else if (Class.excludedFields) {
                 return this.pickFields(_.omit(obj, Class.excludedFields));
