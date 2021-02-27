@@ -119,6 +119,7 @@ export abstract class DatabaseObject {
             const filter = {_id: this._id} as any;
             if (this.isLockable()) {
                 filter.$or = [
+                    {_odmLock: {$exists: false}},
                     {_odmLock: null},
                     {"_odmLock.timeout": {$lt: Date.now()}},
                 ];
