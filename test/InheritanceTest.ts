@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {DatabaseObject, DB} from "../src";
+import {collection, DatabaseObject, DB} from "../src";
 import * as _ from "lodash";
 
 describe("InheritanceTest", async function () {
@@ -25,6 +25,108 @@ describe("InheritanceTest", async function () {
 
         const children = await DB.collection("childs");
         const parents = await DB.collection("parents");
+
+        const resParents = await parents.find({}).toArray();
+        const resChildren = await children.find({}).toArray();
+
+        assert.lengthOf(resParents, 1);
+        assert.lengthOf(resChildren, 1);
+        assert.deepEqual(_.omit(resParents[0], "_id"), parent.getPlainOldObject());
+        assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
+
+    });
+
+    it("Double inheritance creates different collections (Parent with decorator)", async function () {
+
+        @collection("elders")
+        class Parent extends DatabaseObject {
+            value: string;
+        }
+        class Child extends Parent {
+            childValue: string;
+        }
+
+        const parent = new Parent();
+        parent.value = "Parent1";
+        await parent.save();
+
+        assert.deepEqual(Child.getCollectionName(), "childs");
+        const child = new Child();
+        child.value = "Child1";
+        child.childValue = "Child1";
+        await child.save();
+
+        const parents = await DB.collection("elders");
+        const children = await DB.collection("childs");
+
+        const resParents = await parents.find({}).toArray();
+        const resChildren = await children.find({}).toArray();
+
+        assert.lengthOf(resParents, 1);
+        assert.lengthOf(resChildren, 1);
+        assert.deepEqual(_.omit(resParents[0], "_id"), parent.getPlainOldObject());
+        assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
+
+    });
+
+    it("Double inheritance creates different collections (Child with decorator)", async function () {
+
+
+        class Parent extends DatabaseObject {
+            value: string;
+        }
+        @collection("children")
+        class Child extends Parent {
+            childValue: string;
+        }
+
+        const parent = new Parent();
+        parent.value = "Parent1";
+        await parent.save();
+
+        assert.deepEqual(Child.getCollectionName(), "children");
+        const child = new Child();
+        child.value = "Child1";
+        child.childValue = "Child1";
+        await child.save();
+
+        const parents = await DB.collection("parents");
+        const children = await DB.collection("children");
+
+        const resParents = await parents.find({}).toArray();
+        const resChildren = await children.find({}).toArray();
+
+        assert.lengthOf(resParents, 1);
+        assert.lengthOf(resChildren, 1);
+        assert.deepEqual(_.omit(resParents[0], "_id"), parent.getPlainOldObject());
+        assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
+
+    });
+
+    it("Double inheritance creates different collections (Child and Parent with decorator)", async function () {
+
+
+        @collection("elders")
+        class Parent extends DatabaseObject {
+            value: string;
+        }
+        @collection("children")
+        class Child extends Parent {
+            childValue: string;
+        }
+
+        const parent = new Parent();
+        parent.value = "Parent1";
+        await parent.save();
+
+        assert.deepEqual(Child.getCollectionName(), "children");
+        const child = new Child();
+        child.value = "Child1";
+        child.childValue = "Child1";
+        await child.save();
+
+        const parents = await DB.collection("elders");
+        const children = await DB.collection("children");
 
         const resParents = await parents.find({}).toArray();
         const resChildren = await children.find({}).toArray();
