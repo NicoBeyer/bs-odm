@@ -10,12 +10,10 @@ describe("LockableTest", async function () {
         "mongodb://localhost:27017/bs-odm-test";
 
     before(async function() {
-        this.timeout(7000);
         await DB.mongoConnect(MONGO);
     });
 
     after(async function(){
-        this.timeout(7000);
         await DB.disconnect(true);
     });
 

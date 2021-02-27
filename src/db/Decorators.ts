@@ -1,6 +1,6 @@
 import {DatabaseObject, hasCollection} from "./DatabaseObject";
 
-export interface Decoratable {
+export interface Decoratable extends Function, Object {
     fields: string[];
     excludedFields: string[];
     typedFields: any;

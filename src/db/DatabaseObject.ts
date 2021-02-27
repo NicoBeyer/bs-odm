@@ -341,7 +341,7 @@ export abstract class DatabaseObject {
 
     public static getCollectionName(): string {
         const Class = (this as any) as Decoratable;
-        return Class.collectionName || (Class.collectionName = this.name.toLocaleLowerCase() + "s");
+        return (Class.hasOwnProperty("collectionName") && Class.collectionName) || (this.name.toLocaleLowerCase() + "s");
     }
 
     public static getLockOptions(): LockOptions {
@@ -351,7 +351,7 @@ export abstract class DatabaseObject {
 
     private static async _getCollection(): Promise<MongoLikeCollection> {
         const Class = (this as any) as (hasCollection & Decoratable);
-        if (!Class.collection) {
+        if (!(Class.collection && Class.hasOwnProperty("collection"))) {
             Class.collection = await DB.collection(Class.getCollectionName());
             const listener = function() {
                 delete Class.collection;
