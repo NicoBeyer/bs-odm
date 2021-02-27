@@ -134,7 +134,13 @@ export abstract class DatabaseObject {
                 });
 
             if (!result.value) {
-                throw new Error("Unable to save document.");
+                throw new Error("Unable to save document: " + JSON.stringify({
+                    filter,
+                    update: {$set: obj},
+                    options: {
+                        returnOriginal: false
+                    }
+                }));
             }
 
             Object.assign(this, result.value);

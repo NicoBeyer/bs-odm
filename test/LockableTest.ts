@@ -44,7 +44,7 @@ describe("LockableTest", async function () {
             await lockable2.save();
             assert.fail("An Error should have been thrown.");
         } catch (err) {
-            assert.equal(err.message, "Unable to save document.");
+            assert.isOk(err.message.indexOf("Unable to save document") !== -1);
         }
         try {
             await lockable2.lock();
@@ -90,7 +90,7 @@ describe("LockableTest", async function () {
             await lockable2.save();
             assert.fail("An Error should have been thrown.");
         } catch (err) {
-            assert.equal(err.message, "Unable to save document.");
+            assert.isOk(err.message.indexOf("Unable to save document") !== -1);
         }
 
         await Bluebird.delay(55);
