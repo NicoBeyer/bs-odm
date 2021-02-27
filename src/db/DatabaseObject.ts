@@ -119,7 +119,6 @@ export abstract class DatabaseObject {
             const filter = {_id: this._id} as any;
             if (this.isLockable()) {
                 filter.$or = [
-                    {_odmLock: {$exists: false}},
                     {_odmLock: null},
                     {"_odmLock.timeout": {$lt: Date.now()}},
                 ];
@@ -135,14 +134,7 @@ export abstract class DatabaseObject {
                 });
 
             if (!result.value) {
-                throw new Error("Unable to save document: " + JSON.stringify({
-                    filter,
-                    update: {$set: obj},
-                    options: {
-                        returnOriginal: false
-                    },
-                    result
-                }));
+                throw new Error("Unable to save document: " + JSON.stringify( result ));
             }
 
             Object.assign(this, result.value);
