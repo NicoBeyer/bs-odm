@@ -62,7 +62,7 @@ export class _DB extends EventEmitter {
             if (this.isConnected()) {
                 await this.disconnect();
             }
-            
+
             const db = uri.substr(uri.lastIndexOf("/") + 1);
 
             const mongoClientOptions = {
