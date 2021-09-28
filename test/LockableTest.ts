@@ -2,6 +2,7 @@ import {assert} from "chai";
 import {DB} from "../src";
 import {LockableObj} from "./classes/LockableObj";
 import * as Bluebird from "bluebird";
+import * as _ from "lodash";
 
 describe("LockableTest", async function () {
 
@@ -24,7 +25,7 @@ describe("LockableTest", async function () {
         }
     });
 
-    it("locks object, release, fail save wihtout lock object", async function() {
+    it("locks object, release, fail save without lock object", async function() {
         const coll = await DB.collection("lockables");
 
         const lockable = new LockableObj("Test1");
@@ -75,12 +76,46 @@ describe("LockableTest", async function () {
     })
 
     it("lock timeout", async function() {
-        const coll = await DB.collection("lockables");
+        await DB.collection("lockables");
 
         const lockable = new LockableObj("Test1");
         await lockable.save();
         const lockable2 = await LockableObj.findOne<LockableObj>({_id: lockable._id});
         lockable2.value = "lockable2.save()";
+
+        await lockable.lock(50);
+
+        try {
+            await lockable2.save();
+            assert.fail("An Error should have been thrown.");
+        } catch (err) {
+            assert.isOk(err.message.indexOf("Unable to save document") !== -1);
+        }
+
+        await Bluebird.delay(55);
+
+        await lockable2.save();
+
+
+    });
+
+    it("waitForLock", async function() {
+        await DB.collection("lockables");
+
+        const lockable = new LockableObj("Test3");
+        lockable.value = "1";
+        await lockable.save();
+
+        const lockable2 = await LockableObj.findOne<LockableObj>({_id: lockable._id});
+        lockable2.value = "lockable2.save()";
+
+        const promises = [];
+        _.times(10, () => {
+            Promise.resolve().then(async () => {
+                await LockableObj.findOne<LockableObj>({_id: lockable._id});
+            });
+        });
+        await Promise.all(promises);
 
         await lockable.lock(50);
 

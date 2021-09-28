@@ -2,6 +2,7 @@ import { assert } from 'chai'
 import {DB, DatabaseObject} from '../src'
 import * as Bluebird from "bluebird";
 import * as _ from "lodash";
+import {ReturnDocument} from "mongodb";
 
 const MONGO = process.env.MONGO_URL ?
     process.env.MONGO_URL + "/bs-odm-test" :
@@ -261,7 +262,7 @@ describe('DatabaseObject', function(){
         await obj.save();
 
 
-        let ret = await DBObject.findOneAndUpdate<DBObject>({_id:obj._id}, {$inc: {number: 2}, $set: {string: "Another Test String"}}, {returnOriginal: false});
+        let ret = await DBObject.findOneAndUpdate<DBObject>({_id:obj._id}, {$inc: {number: 2}, $set: {string: "Another Test String"}}, {returnDocument: ReturnDocument.AFTER});
 
         assert.equal(ret.number, 3003);
         assert.equal(ret.string, "Another Test String");
@@ -277,7 +278,7 @@ describe('DatabaseObject', function(){
         assert.deepEqual(ret2.array, obj.array);
         assert.deepEqual(ret2.arrayarray, obj.arrayarray);
 
-        let ret3 = await DBObject.findOneAndUpdate<DBObject>({_id:obj._id, number: 0}, {$inc: {number: 2}, $set: {string: "Another Test String"}}, {returnOriginal: false});
+        let ret3 = await DBObject.findOneAndUpdate<DBObject>({_id:obj._id, number: 0}, {$inc: {number: 2}, $set: {string: "Another Test String"}}, {returnDocument: ReturnDocument.AFTER});
 
         assert.isNull(ret3)
     });
@@ -319,6 +320,30 @@ describe('DatabaseObject', function(){
         assert.equal(res1.length, 1);
         assert.equal(res1[0].object.value, "Value 6");
 
+    });
+
+    it("error handling in forEach", async function(){
+
+        for (let i = 0; i < 10; i++) {
+            const obj = new TestClass("skips results in findEach", "Value " + (i + 1));
+            await obj.save();
+        }
+
+        let count = 0;
+        try {
+            await TestClass.findEach({"object.name": "skips results in findEach"}, async () => {
+                await Bluebird.delay(15);
+                count++;
+                if  (count === 5) {
+                    throw new Error("Hello World");
+                }
+            });
+            assert.fail("There should have been an error before this.");
+        } catch(err) {
+            assert.equal(err.message, "Hello World");
+        }
+
+        assert.equal(count, 5);
     });
 
     it("removes listeners on disconnect and connect", async function(){

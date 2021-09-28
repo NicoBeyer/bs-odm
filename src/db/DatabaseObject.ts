@@ -1,9 +1,10 @@
 import {DB, MongoLikeCollection} from './DB'
-import {FindOneAndReplaceOption, ObjectId} from "mongodb";
+import {FindOneAndUpdateOptions, ObjectId, ReturnDocument} from "mongodb";
 import * as _ from "lodash";
 import {Decoratable, LockOptions, OdmLock} from "./Decorators";
 import {v4 as uuidv4} from "uuid";
 import {EnhancedFilterQuery} from "../selector/EnhancedFilterQuery";
+import Bluebird = require('bluebird');
 
 export interface QueryOptions {
     skip?: number;
@@ -41,8 +42,7 @@ export abstract class DatabaseObject {
         }
 
         delete obj._odmLock;
-        const ret = this._instantiate<Type>(obj);
-        return ret;
+        return this._instantiate<Type>(obj);
     }
 
     static async findEach<Type extends DatabaseObject>(
@@ -75,9 +75,9 @@ export abstract class DatabaseObject {
                     let hasNext = await cur.hasNext();
                     if(hasNext){
                         let next = await cur.next();
-                        let obj = self._instantiate<Type>(next);
-                        let ret = iterator(obj)
-                        promises.push(ret)
+                        let obj = self._instantiate<Type>(next as Partial<Type>);
+                        let ret = iterator(obj);
+                        promises.push(ret);
                     }else{
                         break;
                     }
@@ -130,7 +130,7 @@ export abstract class DatabaseObject {
                 filter,
                 {$set: obj},
                 {
-                    returnOriginal: false
+                    returnDocument: ReturnDocument.AFTER
                 });
 
             if (!result.value) {
@@ -197,7 +197,7 @@ export abstract class DatabaseObject {
         }
     }
 
-    public static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndReplaceOption<Type>):Promise<Type>{
+    public static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndUpdateOptions):Promise<Type>{
         let coll = await this._getCollection();
 
         _.keys(update).forEach((key) => {
@@ -386,7 +386,7 @@ export abstract class DatabaseObject {
         const result = await coll.findOneAndUpdate(selector,
             {$set: {
                 _odmLock
-            }}, {returnOriginal: false});
+            }}, {returnDocument: ReturnDocument.AFTER});
 
         if (!result.value) {
             throw new Error("Setting lock on document failed.");
@@ -396,12 +396,27 @@ export abstract class DatabaseObject {
         return this;
     }
 
+    public async waitForLock(ttlMillis?: number) {
+        try {
+            await this.lock(ttlMillis);
+        } catch(err) {
+            if (err.message === "Setting lock on document failed.") {
+                await Bluebird.delay(10);
+                return this.waitForLock(ttlMillis);
+            } else {
+                throw err;
+            }
+        }
+
+        return this;
+    }
+
     public async releaseLock(): Promise<this> {
         const coll = await this.getCollection();
         if (!this._odmLock) {
             return;
         }
-        const ret = await coll.findOneAndUpdate({_id: this._id, "_odmLock.uuid": this._odmLock.uuid},
+        await coll.findOneAndUpdate({_id: this._id, "_odmLock.uuid": this._odmLock.uuid},
             {$unset: {
                  _odmLock: ""
             }});

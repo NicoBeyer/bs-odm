@@ -1,4 +1,4 @@
-import {DatabaseObject, DB, DB as OdmDb} from "../src";
+import {DB, DB as OdmDb} from "../src";
 import {MongoClient} from "mongodb";
 import {assert} from "chai";
 import {DbObj} from "./classes/DbObj";
@@ -16,10 +16,10 @@ describe("DB", async function(){
 
         const promises = [];
 
-        promises.push(OdmDb.mongoConnect(URI, null, null, "admin", true));
-        promises.push(OdmDb.mongoConnect(URI, null, null, "admin",true));
-        promises.push(OdmDb.mongoConnect(URI, null, null, "admin",true));
-        promises.push(OdmDb.mongoConnect(URI, null, null, "admin",true));
+        promises.push(OdmDb.mongoConnect(URI, null, null, null, true));
+        promises.push(OdmDb.mongoConnect(URI, null, null, null,true));
+        promises.push(OdmDb.mongoConnect(URI, null, null, null,true));
+        promises.push(OdmDb.mongoConnect(URI, null, null, null,true));
 
         await Promise.all(promises);
 
@@ -31,7 +31,7 @@ describe("DB", async function(){
     it("performs bring your own database", async function(){
         this.timeout(3000);
 
-        const client = await MongoClient.connect(URI, { useNewUrlParser: true, useUnifiedTopology: true } );
+        const client = await MongoClient.connect(URI, {  } );
         const db = await client.db("bs-mongo-mapper-test");
 
         OdmDb.setDb(db);

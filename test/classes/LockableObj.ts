@@ -11,5 +11,6 @@ export class LockableObj extends DatabaseObject {
     }
 
     value: string;
+    isLatest: boolean;
 
 }
