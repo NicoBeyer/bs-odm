@@ -1,45 +1,37 @@
 import {
-    MongoClient,
-    CollectionInsertOneOptions,
-    InsertOneWriteOpResult,
-    FindOneAndUpdateOption,
-    UpdateManyOptions,
-    FindAndModifyWriteOpResultObject,
-    MongoCountPreferences,
-    CommonOptions,
-    DeleteWriteOpResultObject,
-    Cursor,
-    UpdateOneOptions,
-    UpdateWriteOpResult,
-    MongoClientCommonOption
+    CollectionOptions, CountDocumentsOptions, DeleteResult, Document,
+    FindCursor, FindOneAndUpdateOptions,
+    InsertOneOptions,
+    InsertOneResult, ModifyResult, MongoClient, MongoClientOptions,
+    UpdateOptions,
+    UpdateResult
 } from "mongodb";
-import {DbCollectionOptions} from "mongodb";
 import {EventEmitter} from "events";
+import {CommonOptions} from "child_process";
 
 export {DatabaseObject} from './DatabaseObject';
 
 export interface MongoLikeClient {
     db(name: string): MongoLikeDb;
     connect(): Promise<MongoLikeClient>;
-    isConnected(options?: MongoClientCommonOption): boolean;
     close(force?: boolean): Promise<void>;
 }
 
 export interface MongoLikeDb {
-    collection(name: string, options?: DbCollectionOptions): MongoLikeCollection;
+    collection(name: string, options?: CollectionOptions): MongoLikeCollection;
     collections(): Promise<MongoLikeCollection[]>;
 }
 
 export interface MongoLikeCollection {
     findOne(selector): Promise<any>;
-    find(selector): Cursor;
-    insertOne(docs: any, options?: CollectionInsertOneOptions): Promise<InsertOneWriteOpResult<any>>;
-    updateOne(filter, update, options?: UpdateOneOptions): Promise<UpdateWriteOpResult>;
-    findOneAndUpdate<T>(filter, update, options?: FindOneAndUpdateOption<T>): Promise<FindAndModifyWriteOpResultObject<any>>;
-    updateMany(filter, update, options?: UpdateManyOptions): Promise<UpdateWriteOpResult>;
-    countDocuments(query?, options?: MongoCountPreferences): Promise<number>;
-    deleteMany(filter, options?: CommonOptions): Promise<DeleteWriteOpResultObject>;
-    deleteOne(filter, options?: CommonOptions & { bypassDocumentValidation?: boolean }): Promise<DeleteWriteOpResultObject>;
+    find(selector): FindCursor;
+    insertOne(docs: any, options?: InsertOneOptions): Promise<InsertOneResult<any>>;
+    updateOne(filter, update, options?: UpdateOptions): Promise<Document | UpdateResult>;
+    findOneAndUpdate<T>(filter, update, options?: FindOneAndUpdateOptions): Promise<ModifyResult<any>>;
+    updateMany(filter, update, options?: UpdateOptions): Promise<Document | UpdateResult>;
+    countDocuments(query?, options?: CountDocumentsOptions): Promise<number>;
+    deleteMany(filter, options?: CommonOptions): Promise<DeleteResult>;
+    deleteOne(filter, options?: CommonOptions & { bypassDocumentValidation?: boolean }): Promise<DeleteResult>;
 }
 
 export class _DB extends EventEmitter {
@@ -70,22 +62,22 @@ export class _DB extends EventEmitter {
             if (this.isConnected()) {
                 await this.disconnect();
             }
-
-            const server = uri.substr(uri.indexOf("//") + 2); //.substr(0, uri.lastIndexOf("/") - 1)
+            
             const db = uri.substr(uri.lastIndexOf("/") + 1);
 
-            let pwd = "";
-            let auth = "";
-            if(user && password) {
-                pwd = encodeURIComponent(user) + ":" + encodeURIComponent(password) + "@";
+            const mongoClientOptions = {
+                ignoreUndefined: true
+            } as MongoClientOptions;
+            if (user) {
+                mongoClientOptions.auth = {
+                    username: user,
+                    password
+                }
             }
-            if (authSource) {
-                auth = "?authSource=" + authSource;
-            }
+            mongoClientOptions.authSource = authSource;
+            this.client = new MongoClient(uri, mongoClientOptions);
+            await this.client.connect();
 
-            const url = "mongodb://" + pwd + server + auth;
-
-            this.client = await MongoClient.connect(url, { useNewUrlParser: true, useUnifiedTopology: true, ignoreUndefined: true } );
             this.db = await this.client.db(db);
             this.stateConnecting = false;
             this.emit("connected", this);
@@ -103,14 +95,10 @@ export class _DB extends EventEmitter {
     }
 
     public isConnected() {
-        if (this.client && this.client.isConnected()) {
-            return true;
-        } else {
-            return false;
-        }
+        return !!this.client;
     }
 
-    public async collection(name: string, options?: DbCollectionOptions): Promise<MongoLikeCollection> {
+    public async collection(name: string, options?: CollectionOptions): Promise<MongoLikeCollection> {
         return this.db.collection(name, options);
     }
     public async collections(): Promise<MongoLikeCollection[]> {
