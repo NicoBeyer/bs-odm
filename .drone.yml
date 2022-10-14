@@ -1,33 +1,53 @@
 ---
 kind: pipeline
-name: npm_mongo_1.3.0
+type: docker
+name: npm_mongo_1.4.1
 
 ## Secrets in use
-# NPM_PUBLISH_TOKEN: Token with publish rights on repository for project
-# NPM_TOKEN: Token with read rights to @nbeyer/* repositories
+# NPM_TOKEN: Token with read rights to @nbeyer/* repositories and publish for this repo
 # AWS_ACCESS_KEY_ID
 # AWS_SECRET_ACCESS_KEY
+# AWS_DEFAULT_REGION
 
 trigger:
   event:
     - push
 
 steps:
+  - name: restore-cache-with-key
+    image: meltwater/drone-cache:dev
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: AWS_SECRET_ACCESS_KEY
+      AWS_DEFAULT_REGION:
+        from_secret: AWS_DEFAULT_REGION
+    settings:
+      restore: true
+      bucket: beyer.dev.cache
+      region: AWS_DEFAULT_REGION
+      archive_format: "gzip"
+      cache_key: '{{ .Repo.Name }}'
+      mount:
+        - 'node_modules'
+
   - name: build
-    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node12.x
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node16-aws
     commands:
       - node -v
       - npm -v
       - tsc -v
       - npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
       - npm i
+      - git add package-lock.json && git commit -m "package-lock [CI SKIP]" || true
       - tsc
     environment:
       NPM_TOKEN:
         from_secret: NPM_TOKEN
 
   - name: unittest
-    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node12.x
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node16-aws
     commands:
       - npm test
     environment:
@@ -37,10 +57,11 @@ steps:
       AWS_SECRET_ACCESS_KEY:
         from_secret: AWS_SECRET_ACCESS_KEY
       AWS_DEFAULT_OUTPUT: json
-      AWS_DEFAULT_REGION: eu-west-1
+      AWS_DEFAULT_REGION:
+        from_secret: AWS_DEFAULT_REGION
 
   - name: publish
-    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node12.x
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node16-aws
     commands:
       - npm config set //registry.npmjs.org/:_authToken $NPM_PUBLISH_TOKEN
       - git config user.email $DRONE_COMMIT_AUTHOR_EMAIL
@@ -51,7 +72,7 @@ steps:
       - git push --follow-tags --set-upstream origin master
     environment:
       NPM_PUBLISH_TOKEN:
-        from_secret: NPM_PUBLISH_TOKEN
+        from_secret: NPM_TOKEN
       DRONE_COMMIT_AUTHOR: $DRONE_COMMIT_AUTHOR
       DRONE_COMMIT_AUTHOR_EMAIL: $DRONE_COMMIT_AUTHOR_EMAIL
       DRONE_COMMIT_SHA: $DRONE_COMMIT_SHA
@@ -59,6 +80,24 @@ steps:
     when:
       branch:
         - master
+
+  - name: rebuild-cache
+    image: meltwater/drone-cache:dev
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: AWS_SECRET_ACCESS_KEY
+      AWS_DEFAULT_REGION:
+        from_secret: AWS_DEFAULT_REGION
+    settings:
+      rebuild: true
+      bucket: beyer.dev.cache
+      region: AWS_DEFAULT_REGION
+      archive_format: "gzip"
+      cache_key: '{{ .Repo.Name }}'
+      mount:
+        - 'node_modules'
 
 services:
   - name: mongo
@@ -68,6 +107,6 @@ services:
 
 ---
 kind: signature
-hmac: 6bae9f4317bf16247c506cd5c9e7d758fda9ab75155db4f39584f446db64340c
+hmac: a90c9fd700a5d846a817bd867a7f24981189698807b886595e95b11908691b7b
 
 ...
