@@ -13,7 +13,7 @@ export interface LockOptions {
 }
 
 export interface OdmLock {
-    uuid: string;
+    uuid?: string;
     timeout: number;
 }
 
