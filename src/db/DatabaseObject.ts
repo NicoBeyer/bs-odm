@@ -423,9 +423,9 @@ export abstract class DatabaseObject {
         delete this._odmLock;
 
         return this;
-    }
+    }ts
 
-    public getPlainOldObject<T extends Record<string, unknown>>(): T {
+    public getPlainOldObject<T extends object>(): T {
         return _.omit(this, "_id", "_odmIsNew", "_odmLock") as T;
     }
 
