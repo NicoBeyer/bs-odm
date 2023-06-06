@@ -1,5 +1,5 @@
 import {
-    CollectionOptions, CountDocumentsOptions, DeleteResult, Document,
+    CollectionOptions, CountDocumentsOptions, DeleteOptions, DeleteResult, Document,
     FindCursor, FindOneAndUpdateOptions,
     InsertOneOptions,
     InsertOneResult, ModifyResult, MongoClient, MongoClientOptions,
@@ -7,7 +7,6 @@ import {
     UpdateResult
 } from "mongodb";
 import {EventEmitter} from "events";
-import {CommonOptions} from "child_process";
 
 export {DatabaseObject} from './DatabaseObject';
 
@@ -30,8 +29,8 @@ export interface MongoLikeCollection {
     findOneAndUpdate<T>(filter, update, options?: FindOneAndUpdateOptions): Promise<ModifyResult<any>>;
     updateMany(filter, update, options?: UpdateOptions): Promise<Document | UpdateResult>;
     countDocuments(query?, options?: CountDocumentsOptions): Promise<number>;
-    deleteMany(filter, options?: CommonOptions): Promise<DeleteResult>;
-    deleteOne(filter, options?: CommonOptions & { bypassDocumentValidation?: boolean }): Promise<DeleteResult>;
+    deleteMany(filter, options?: DeleteOptions): Promise<DeleteResult>;
+    deleteOne(filter, options?: DeleteOptions & { bypassDocumentValidation?: boolean }): Promise<DeleteResult>;
 }
 
 export class _DB extends EventEmitter {
