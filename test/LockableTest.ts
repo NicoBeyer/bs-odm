@@ -1,14 +1,11 @@
 import {assert} from "chai";
 import {DB} from "../src";
 import {LockableObj} from "./classes/LockableObj";
-import * as Bluebird from "bluebird";
+import {setTimeout} from "timers/promises";
 import * as _ from "lodash";
+import {MONGO} from "./helper/env";
 
 describe("LockableTest", async function () {
-
-    const MONGO = process.env.MONGO_URL ?
-        process.env.MONGO_URL + "/bs-odm-test" :
-        "mongodb://localhost:27017/bs-odm-test";
 
     before(async function() {
         await DB.mongoConnect(MONGO);
@@ -92,7 +89,7 @@ describe("LockableTest", async function () {
             assert.isOk(err.message.indexOf("Unable to save document") !== -1);
         }
 
-        await Bluebird.delay(55);
+        await setTimeout(55);
 
         await lockable2.save();
 
@@ -126,7 +123,7 @@ describe("LockableTest", async function () {
             assert.isOk(err.message.indexOf("Unable to save document") !== -1);
         }
 
-        await Bluebird.delay(55);
+        await setTimeout(55);
 
         await lockable2.save();
 

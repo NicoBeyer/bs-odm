@@ -1,17 +1,15 @@
 import { assert } from 'chai'
 import {DB, DatabaseObject} from '../src'
-import * as Bluebird from "bluebird";
+import {setTimeout} from "timers/promises";
 import * as _ from "lodash";
 import {ReturnDocument} from "mongodb";
+import {MONGO} from "./helper/env";
 
-const MONGO = process.env.MONGO_URL ?
-    process.env.MONGO_URL + "/bs-odm-test" :
-    "mongodb://localhost:27017/bs-odm-test";
-
-describe('DatabaseObject', function(){
+describe('DatabaseObject', async function(){
 
     before(async function() {
-        this.timeout(7000);
+        this.timeout() && this.timeout(7000);
+        console.log(MONGO);
         await DB.mongoConnect(MONGO);
 
         // clear db
@@ -332,7 +330,7 @@ describe('DatabaseObject', function(){
         let count = 0;
         try {
             await TestClass.findEach({"object.name": "skips results in findEach"}, async () => {
-                await Bluebird.delay(15);
+                await setTimeout(15);
                 count++;
                 if  (count === 5) {
                     throw new Error("Hello World");
@@ -368,7 +366,7 @@ describe('DatabaseObject', function(){
         assert.equal(DB.listenerCount(DB.EVENT_CONNECTED), 3);
 
         await DB.disconnect();
-        await Bluebird.delay(10);
+        await setTimeout(10);
 
         assert.equal(DB.listenerCount(DB.EVENT_DISCONNECTED), 0);
         assert.equal(DB.listenerCount(DB.EVENT_CONNECTED), 0);

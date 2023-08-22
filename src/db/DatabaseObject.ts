@@ -4,7 +4,7 @@ import * as _ from "lodash";
 import {Decoratable, LockOptions, OdmLock} from "./Decorators";
 import {v4 as uuidv4} from "uuid";
 import {EnhancedFilterQuery} from "../selector/EnhancedFilterQuery";
-import Bluebird = require('bluebird');
+import {setTimeout} from "timers/promises";
 
 export interface QueryOptions {
     skip?: number;
@@ -401,7 +401,7 @@ export abstract class DatabaseObject {
             await this.lock(ttlMillis);
         } catch(err) {
             if (err.message === "Setting lock on document failed.") {
-                await Bluebird.delay(10);
+                await setTimeout(10);
                 return this.waitForLock(ttlMillis);
             } else {
                 throw err;

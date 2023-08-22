@@ -1,12 +1,9 @@
 import {assert} from "chai";
 import {DatabaseObject, DB} from "../src";
 import {EnhancedFilterQuery} from "../src/selector/EnhancedFilterQuery";
+import {MONGO} from "./helper/env";
 
 describe("EnhancedFilterQueryTest", async function () {
-
-    const MONGO = process.env.MONGO_URL ?
-        process.env.MONGO_URL + "/bs-odm-test" :
-        "mongodb://localhost:27017/bs-odm-test";
 
     before(async function() {
         this.timeout(7000);

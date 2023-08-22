@@ -62,7 +62,7 @@ export class _DB extends EventEmitter {
                 await this.disconnect();
             }
 
-            const db = uri.substr(uri.lastIndexOf("/") + 1);
+            const db = uri.substring(uri.lastIndexOf("/") + 1);
 
             const mongoClientOptions = {
                 ignoreUndefined: true
@@ -73,7 +73,11 @@ export class _DB extends EventEmitter {
                     password
                 }
             }
-            mongoClientOptions.authSource = authSource;
+
+            if (authSource) {
+                mongoClientOptions.authSource = authSource;
+            }
+
             this.client = new MongoClient(uri, mongoClientOptions);
             await this.client.connect();
 

@@ -2,10 +2,7 @@ import {DB, DB as OdmDb} from "../src";
 import {MongoClient} from "mongodb";
 import {assert} from "chai";
 import {DbObj} from "./classes/DbObj";
-
-const MONGO = process.env.MONGO_URL ?
-    process.env.MONGO_URL + "bs-odm-test" :
-    "mongodb://localhost:27017/bs-odm-test";
+import {MONGO} from "./helper/env";
 
 const URI = MONGO;
 

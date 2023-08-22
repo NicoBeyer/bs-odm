@@ -1,6 +1,5 @@
-import {DatabaseObject, MongoLikeClient, MongoLikeCollection} from "../db/DB";
+import {MongoLikeCollection} from "../db/DB";
 import * as _ from "lodash";
-
 
 export class EnhancedFilterQuery {
 
@@ -18,10 +17,6 @@ export class EnhancedFilterQuery {
             } else {
                 ret.filterQuery[key] = filterQuery[key];
             }
-        });
-
-        Object.keys(filterQuery).forEach(key => {
-
         });
 
         return ret;

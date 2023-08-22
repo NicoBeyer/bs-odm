@@ -2,14 +2,11 @@ import {DatabaseObject, DB, collection, exclude, field} from "../src";
 import * as _ from "lodash";
 import * as chai from "chai";
 import * as chaiAsPromised from "chai-as-promised";
+import {MONGO} from "./helper/env";
 
 chai.use(chaiAsPromised);
 const assert = chai.assert;
 chai.should();
-
-const MONGO = process.env.MONGO_URL ?
-    process.env.MONGO_URL + "bs-odm-test" :
-    "mongodb://localhost:27017/bs-odm-test";;
 
 describe("Decorators", async function() {
 

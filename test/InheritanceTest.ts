@@ -1,6 +1,7 @@
 import {assert} from "chai";
 import {collection, DatabaseObject, DB} from "../src";
 import * as _ from "lodash";
+import {MONGO} from "./helper/env";
 
 describe("InheritanceTest", async function () {
 
@@ -169,10 +170,6 @@ describe("InheritanceTest", async function () {
         assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
 
     });
-
-    const MONGO = process.env.MONGO_URL ?
-        process.env.MONGO_URL + "/bs-odm-test" :
-        "mongodb://localhost:27017/bs-odm-test";
 
     before(async function() {
         await DB.mongoConnect(MONGO);
