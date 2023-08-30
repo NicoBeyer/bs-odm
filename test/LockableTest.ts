@@ -70,7 +70,29 @@ describe("LockableTest", async function () {
         await lockable.save();
 
         await lockable.releaseLock();
-    })
+    });
+
+    it("lock object with timed out lock", async function() {
+        await DB.collection("lockables");
+
+        const lockable = new LockableObj("Test1");
+        await lockable.save();
+        const lockable2 = await LockableObj.findOne<LockableObj>({_id: lockable._id});
+        lockable2.value = "lockable2.save()";
+
+        await lockable.lock(50);
+
+        try {
+            await lockable2.save();
+            assert.fail("An Error should have been thrown.");
+        } catch (err) {
+            assert.isOk(err.message.indexOf("Unable to save document") !== -1);
+        }
+
+        await setTimeout(55);
+
+        await lockable2.lock();
+    });
 
     it("lock timeout", async function() {
         await DB.collection("lockables");
@@ -92,8 +114,6 @@ describe("LockableTest", async function () {
         await setTimeout(55);
 
         await lockable2.save();
-
-
     });
 
     it("waitForLock", async function() {
@@ -126,8 +146,6 @@ describe("LockableTest", async function () {
         await setTimeout(55);
 
         await lockable2.save();
-
-
     });
 
 

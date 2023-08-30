@@ -378,7 +378,7 @@ export abstract class DatabaseObject {
             _id: this._id,
             $or: [
                 {_odmLock: null},
-                {"_odmLock.timestamp": {$lt: Date.now()}}
+                {"_odmLock.timeout": {$lt: Date.now()}}
             ]
         } as any;
 
