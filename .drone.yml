@@ -1,6 +1,6 @@
 ---
 kind: pipeline
-type: docker
+type: kubernetes
 name: npm_mongo_1.4.1
 
 ## Secrets in use
@@ -107,6 +107,6 @@ services:
 
 ---
 kind: signature
-hmac: a90c9fd700a5d846a817bd867a7f24981189698807b886595e95b11908691b7b
+hmac: 96ed7f3ae596970a3e730fa00de57f27a617e2cdd6511dc3be06cb39efbf71db
 
 ...

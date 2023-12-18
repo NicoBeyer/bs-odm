@@ -47,8 +47,7 @@ describe("Decorators", async function() {
 
         await test.save();
 
-        const res = await testCollection.findOne({field1: "Test1"});
-        delete res._id;
+        const res = _.omit(await testCollection.findOne({field1: "Test1"}), "_id");
         assert.deepEqual(res, {
             field1:"Test1",
             field2: "Test2"
@@ -71,7 +70,7 @@ describe("Decorators", async function() {
 
         await test.save();
 
-        const res = await testCollection.findOne({field1: "Test1"});
+        const res = _.omit(await testCollection.findOne({field1: "Test1"}), "_id");
         delete res._id;
         assert.deepEqual(res, {
             field1:"Test1",
@@ -129,7 +128,7 @@ describe("Decorators", async function() {
 
         await test.save();
 
-        const res = await testCollection.findOne({field1: "TypedTest1"});
+        const res = _.omit(await testCollection.findOne({field1: "TypedTest1"}), "_id");
         delete res._id;
         assert.deepEqual(res, {
             field1:"TypedTest1",
@@ -331,7 +330,7 @@ describe("Decorators", async function() {
             assert.instanceOf(i, Nested);
         }
 
-        const res = await testCollection.findOne({id: 5000});
+        const res = _.omit(await testCollection.findOne({id: 5000}),  "_id");
         delete res._id;
         assert.deepEqual(res, {
             id: 5000,
@@ -417,8 +416,7 @@ describe("Decorators", async function() {
         assert.instanceOf(test.exclude, NestedExclude);
         assert.instanceOf(test.include, NestedInclude);
 
-        const res = await testCollection.findOne({id: 6000});
-        delete res._id;
+        const res = _.omit(await testCollection.findOne({id: 6000}), "_id");
         assert.deepEqual(res, {
             id: 6000,
             exclude: {

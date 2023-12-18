@@ -1,5 +1,5 @@
 import {DB, MongoLikeCollection} from './DB'
-import {FindOneAndUpdateOptions, ObjectId, ReturnDocument} from "mongodb";
+import {Document, FindOneAndUpdateOptions, ObjectId, ReturnDocument, WithId} from "mongodb";
 import * as _ from "lodash";
 import {Decoratable, LockOptions, OdmLock} from "./Decorators";
 import {v4 as uuidv4} from "uuid";
@@ -386,13 +386,13 @@ export abstract class DatabaseObject {
         const result = await coll.findOneAndUpdate(selector,
             {$set: {
                 _odmLock
-            }}, {returnDocument: ReturnDocument.AFTER});
+            }}, {returnDocument: ReturnDocument.AFTER}) as WithId<Document>;
 
-        if (!result.value) {
+        if (!result) {
             throw new Error("Setting lock on document failed.");
         }
 
-        this._odmLock = result.value._odmLock;
+        this._odmLock = result._odmLock;
         return this;
     }
 

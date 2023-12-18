@@ -1,11 +1,4 @@
-import {
-    CollectionOptions, CountDocumentsOptions, DeleteOptions, DeleteResult, Document,
-    FindCursor, FindOneAndUpdateOptions,
-    InsertOneOptions,
-    InsertOneResult, ModifyResult, MongoClient, MongoClientOptions,
-    UpdateOptions,
-    UpdateResult
-} from "mongodb";
+import {Collection, CollectionOptions, MongoClient, MongoClientOptions} from "mongodb";
 import {EventEmitter} from "events";
 
 export {DatabaseObject} from './DatabaseObject';
@@ -21,17 +14,9 @@ export interface MongoLikeDb {
     collections(): Promise<MongoLikeCollection[]>;
 }
 
-export interface MongoLikeCollection {
-    findOne(selector): Promise<any>;
-    find(selector): FindCursor;
-    insertOne(docs: any, options?: InsertOneOptions): Promise<InsertOneResult<any>>;
-    updateOne(filter, update, options?: UpdateOptions): Promise<Document | UpdateResult>;
-    findOneAndUpdate<T>(filter, update, options?: FindOneAndUpdateOptions): Promise<ModifyResult<any>>;
-    updateMany(filter, update, options?: UpdateOptions): Promise<Document | UpdateResult>;
-    countDocuments(query?, options?: CountDocumentsOptions): Promise<number>;
-    deleteMany(filter, options?: DeleteOptions): Promise<DeleteResult>;
-    deleteOne(filter, options?: DeleteOptions & { bypassDocumentValidation?: boolean }): Promise<DeleteResult>;
-}
+export interface MongoLikeCollection extends Pick<Collection, "findOne" | "find" |
+    "insertOne" | "updateOne" | "findOneAndUpdate" | "updateMany" |
+    "countDocuments" | "deleteMany" | "deleteOne"> {}
 
 export class _DB extends EventEmitter {
     public readonly EVENT_CONNECTING = "connecting";

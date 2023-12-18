@@ -60,8 +60,7 @@ describe("LockableTest", async function () {
 
         const objs = await coll.find({}).toArray();
         assert.lengthOf(objs, 1);
-        const obj = objs[0];
-        delete obj._id;
+        const obj = _.omit(objs[0], "_id");
         assert.deepEqual(obj, {value: "lockable2.save()"});
     });
 
