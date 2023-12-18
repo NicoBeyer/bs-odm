@@ -133,11 +133,11 @@ export abstract class DatabaseObject {
                     returnDocument: ReturnDocument.AFTER
                 });
 
-            if (!result.value) {
+            if (!result) {
                 throw new Error("Unable to save document: " + JSON.stringify( result ));
             }
 
-            Object.assign(this, result.value);
+            Object.assign(this, result);
 
             this.updateFields();
         }
@@ -200,6 +200,10 @@ export abstract class DatabaseObject {
     public static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndUpdateOptions):Promise<Type>{
         let coll = await this._getCollection();
 
+        if (options && options.includeResultMetadata) {
+            throw new Error("The option 'includeResultMetadata' is not supported.");
+        }
+
         _.keys(update).forEach((key) => {
             this.validateFields(update[key]);
             if (key === "$rename") {
@@ -207,10 +211,10 @@ export abstract class DatabaseObject {
             }
         });
 
-        let result = await coll.findOneAndUpdate(filter, update, options)
+        let result = await coll.findOneAndUpdate(filter, update, options) as Type;
 
-        if(result.value){
-            return this._instantiate<Type>(result.value)
+        if(result){
+            return this._instantiate<Type>(result)
         }else{
             return null;
         }

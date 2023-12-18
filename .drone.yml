@@ -33,7 +33,7 @@ steps:
         - 'node_modules'
 
   - name: build
-    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node16-aws
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node18-aws
     commands:
       - node -v
       - npm -v
@@ -47,7 +47,7 @@ steps:
         from_secret: NPM_TOKEN
 
   - name: unittest
-    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node16-aws
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node18-aws
     commands:
       - npm test
     environment:
@@ -61,7 +61,7 @@ steps:
         from_secret: AWS_DEFAULT_REGION
 
   - name: publish
-    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node16-aws
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node18-aws
     commands:
       - npm config set //registry.npmjs.org/:_authToken $NPM_PUBLISH_TOKEN
       - git config user.email $DRONE_COMMIT_AUTHOR_EMAIL
@@ -107,6 +107,6 @@ services:
 
 ---
 kind: signature
-hmac: 96ed7f3ae596970a3e730fa00de57f27a617e2cdd6511dc3be06cb39efbf71db
+hmac: dd77c7226a9cd079a8df798abc60b843478a84d04aebe1336538e41a977bfca7
 
 ...
