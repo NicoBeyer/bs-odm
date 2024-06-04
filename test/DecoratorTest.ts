@@ -1,11 +1,11 @@
 import {DatabaseObject, DB, collection, exclude, field} from "../src";
 import * as _ from "lodash";
 import * as chai from "chai";
+import {assert} from "chai";
 import * as chaiAsPromised from "chai-as-promised";
 import {MONGO} from "./helper/env";
 
 chai.use(chaiAsPromised);
-const assert = chai.assert;
 chai.should();
 
 describe("Decorators", async function() {

@@ -317,10 +317,9 @@ describe('DatabaseObject', async function(){
         const res1 = await TestClass.find<TestClass>({"object.name": "skips results in find"}, {skip: 5, limit: 1});
         assert.equal(res1.length, 1);
         assert.equal(res1[0].object.value, "Value 6");
-
     });
 
-    it("error handling in forEach", async function(){
+    it("error handling in findEach", async function(){
 
         for (let i = 0; i < 10; i++) {
             const obj = new TestClass("skips results in findEach", "Value " + (i + 1));
@@ -340,6 +339,27 @@ describe('DatabaseObject', async function(){
         } catch(err) {
             assert.equal(err.message, "Hello World");
         }
+
+        assert.equal(count, 5);
+    });
+
+    it("stops recursion if fn returns false in forEach", async function(){
+
+        for (let i = 0; i < 10; i++) {
+            const obj = new TestClass("breaks in findEach", "Value " + (i + 1));
+            await obj.save();
+        }
+
+        let count = 0;
+
+        await TestClass.findEach({"object.name": "breaks in findEach"}, async () => {
+            await setTimeout(15);
+            count++;
+            if  (count === 5) {
+                return false;
+            }
+        });
+
 
         assert.equal(count, 5);
     });

@@ -47,7 +47,7 @@ export abstract class DatabaseObject {
 
     static async findEach<Type extends DatabaseObject>(
         selector = {} as any,
-        iterator:(obj:Type)=>void|Promise<void>,
+        fn:(obj:Type)=>void|boolean|Promise<void|boolean>,
         options = {} as QueryOptions | number):Promise<void> {
         const coll = await this._getCollection();
         let self = this;
@@ -76,14 +76,17 @@ export abstract class DatabaseObject {
                     if(hasNext){
                         let next = await cur.next();
                         let obj = self._instantiate<Type>(next as Partial<Type>);
-                        let ret = iterator(obj);
-                        promises.push(ret);
+                        promises.push(fn(obj));
                     }else{
                         break;
                     }
                 }
-                return Promise.all(promises)
-            }).then(()=>{
+                return Promise.all(promises);
+            }).then((res)=>{
+                if (_.includes(res, false)) {
+                    return false;
+                }
+
                 return cur.hasNext()
             }).then((hasNext)=>{
                 if(hasNext){
