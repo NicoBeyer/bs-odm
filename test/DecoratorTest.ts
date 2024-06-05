@@ -47,11 +47,12 @@ describe("Decorators", async function() {
 
         await test.save();
 
-        const res = _.omit(await testCollection.findOne({field1: "Test1"}), "_id");
-        assert.deepEqual(res, {
+        const res = await testCollection.findOne({field1: "Test1"});
+        assert.deepEqual(_.omit(res, "_id"), {
             field1:"Test1",
             field2: "Test2"
         });
+        assert.isObject(res._id);
     });
 
     it("@exclude", async function() {

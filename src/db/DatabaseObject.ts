@@ -327,7 +327,7 @@ export abstract class DatabaseObject {
         let Class = ret.constructor as Decoratable;
         delete ret._odmIsNew;
         if (Class.fields) {
-            Object.assign(ret, _.pick(obj, Class.fields));
+            Object.assign(ret, _.pick(obj, "_id", "_odmLock", ...Class.fields));
         } else {
             Object.assign(ret, obj)
         }
