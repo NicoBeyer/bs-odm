@@ -6,10 +6,13 @@ import {v4 as uuidv4} from "uuid";
 import {EnhancedFilterQuery} from "../selector/EnhancedFilterQuery";
 import {setTimeout} from "timers/promises";
 
+export type SortDirection = 1 | -1;
+
 export interface QueryOptions {
     skip?: number;
     limit?: number;
     concurrent?: number;
+    sort?: Record<string, SortDirection>;
 }
 
 export interface hasCollection {
@@ -51,35 +54,34 @@ export abstract class DatabaseObject {
         options = {} as QueryOptions | number):Promise<void> {
         const coll = await this._getCollection();
         let self = this;
-        let concurrent: number;
+        let concurrent =(options as QueryOptions).concurrent || 1;
         if (typeof options === "number") {
             concurrent = options;
             options = {};
-        } else {
-            concurrent = options.concurrent || 1;
         }
 
         let cur = coll.find(selector);
 
+        if (options.sort) {
+            cur.sort(options.sort);
+        }
         if (options.skip) {
-            cur = cur.skip(options.skip);
+            cur.skip(options.skip);
         }
         if (options.limit) {
-            cur = cur.limit(options.limit);
+            cur.limit(options.limit);
         }
 
         return (function recursive(){
             return Promise.resolve().then(async ()=>{
                 let promises = []
                 for(let i = 0; i < concurrent; i++){
-                    let hasNext = await cur.hasNext();
-                    if(hasNext){
-                        let next = await cur.next();
-                        let obj = self._instantiate<Type>(next as Partial<Type>);
-                        promises.push(fn(obj));
-                    }else{
+                    let next = await cur.next();
+                    if (!next) {
                         break;
                     }
+                    let obj = self._instantiate<Type>(next as Partial<Type>);
+                    promises.push(fn(obj));
                 }
                 return Promise.all(promises);
             }).then((res)=>{

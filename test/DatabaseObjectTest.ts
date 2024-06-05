@@ -304,6 +304,20 @@ describe('DatabaseObject', async function(){
         assert.deepEqual(values, ["Value 8", "Value 9"])
     });
 
+    it("sorts results in find", async function(){
+
+        for (let i = 0; i < 9; i++) {
+            const obj = new TestClass("skips results in findEach", "Value " + (i + 1));
+            await obj.save();
+        }
+
+        const res = await TestClass.find<TestClass>({}, {limit: 5, sort: {"object.value": -1}});
+        assert.lengthOf(res, 5);
+
+        assert.deepEqual(res.map(r => r.object.value), ["Value 9", "Value 8", "Value 7", "Value 6", "Value 5"]);
+
+    });
+
     it("skips and limits results in find", async function(){
 
         for (let i = 0; i < 10; i++) {
