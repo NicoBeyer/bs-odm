@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {DatabaseObject, DB, Pojo} from "../src";
+import {DatabaseObject, DB} from "../src";
 import {EnhancedFilterQuery} from "../src/selector/EnhancedFilterQuery";
 import {MONGO} from "./helper/env";
 
@@ -50,10 +50,6 @@ describe("EnhancedFilterQueryTest", async function () {
         class Sortable extends DatabaseObject {
             numValue: number;
             value: string;
-
-            getPlainOldObject(): Pojo<this> {
-                return super.getPlainOldObject();
-            }
         }
 
         for (let i = 0; i < 10; i++) {
