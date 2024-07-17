@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {DatabaseObject, DB} from "../src";
+import {DatabaseObject, DB, Pojo} from "../src";
 import {EnhancedFilterQuery} from "../src/selector/EnhancedFilterQuery";
 import {MONGO} from "./helper/env";
 
@@ -50,6 +50,10 @@ describe("EnhancedFilterQueryTest", async function () {
         class Sortable extends DatabaseObject {
             numValue: number;
             value: string;
+
+            getPlainOldObject(): Pojo<this> {
+                return super.getPlainOldObject();
+            }
         }
 
         for (let i = 0; i < 10; i++) {
@@ -59,8 +63,8 @@ describe("EnhancedFilterQueryTest", async function () {
             await o.save();
         }
 
-        const max = await Sortable.findOne({numValue: {$max: 1}})
-        const min = await Sortable.findOne({numValue: {$min: 1}})
+        const max = await Sortable.findOne<Sortable>({numValue: {$max: 1}})
+        const min = await Sortable.findOne<Sortable>({numValue: {$min: 1}})
 
         delete max._id;
         delete min._id;

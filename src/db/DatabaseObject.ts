@@ -20,6 +20,8 @@ export interface hasCollection {
     getCollectionName: () => string;
 }
 
+export type Pojo<T extends DatabaseObject> = Partial<Omit<T, "_id" | "_odmIsNew" | "_odmLock">>;
+
 export abstract class DatabaseObject {
 
     public _id:any;
@@ -432,10 +434,15 @@ export abstract class DatabaseObject {
         delete this._odmLock;
 
         return this;
-    }ts
+    }
 
-    public getPlainOldObject<T extends object>(): T {
-        return _.omit(this, "_id", "_odmIsNew", "_odmLock") as T;
+    public getPlainOldObject(): Pojo<this> {
+        const Class = (this.constructor as any) as Decoratable;
+        let ret: Pojo<this> = _.omit(this, ...(["_id", "_odmIsNew", "_odmLock"].concat(Class.excludedFields || []))) as unknown as Pojo<this>;
+        if (Class.fields) {
+            ret = _.pick(ret, Class.fields)  as Pojo<this>;
+        }
+        return ret;
     }
 
 }

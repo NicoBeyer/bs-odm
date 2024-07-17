@@ -72,8 +72,13 @@ describe("Decorators", async function() {
         await test.save();
 
         const res = _.omit(await testCollection.findOne({field1: "Test1"}), "_id");
-        delete res._id;
         assert.deepEqual(res, {
+            field1:"Test1",
+            field2: "Test2"
+        });
+
+        const pojo = test.getPlainOldObject();
+        assert.deepEqual(pojo, {
             field1:"Test1",
             field2: "Test2"
         });
