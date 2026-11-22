@@ -29,7 +29,7 @@ export abstract class DatabaseObject {
     public _odmLock: OdmLock;
 
     static async find<Type extends DatabaseObject>(selector = {} as any, options = {} as QueryOptions):Promise<Type[]>{
-        let ret = [] as Type[]
+        const ret = [] as Type[]
         return DatabaseObject.findEach.call(this, selector, (obj:Type)=>{
             ret.push(obj)
         }, options).then(()=>{
@@ -55,14 +55,13 @@ export abstract class DatabaseObject {
         fn:(obj:Type)=>void|boolean|Promise<void|boolean>,
         options = {} as QueryOptions | number):Promise<void> {
         const coll = await this._getCollection();
-        let self = this;
         let concurrent =(options as QueryOptions).concurrent || 1;
         if (typeof options === "number") {
             concurrent = options;
             options = {};
         }
 
-        let cur = coll.find(selector);
+        const cur = coll.find(selector);
 
         if (options.sort) {
             cur.sort(options.sort);
@@ -74,15 +73,15 @@ export abstract class DatabaseObject {
             cur.limit(options.limit);
         }
 
-        return (function recursive(){
+        const recursive = (): Promise<void> => {
             return Promise.resolve().then(async ()=>{
-                let promises = []
+                const promises = []
                 for(let i = 0; i < concurrent; i++){
-                    let next = await cur.next();
+                    const next = await cur.next();
                     if (!next) {
                         break;
                     }
-                    let obj = self._instantiate<Type>(next as Partial<Type>);
+                    const obj = this._instantiate<Type>(next as Partial<Type>);
                     promises.push(fn(obj));
                 }
                 return Promise.all(promises);
@@ -102,11 +101,13 @@ export abstract class DatabaseObject {
                 }
                 throw err
             })
-        })()
+        };
+
+        return recursive();
     }
 
     async save(fields?: any): Promise<this> {
-        let coll = await this.getCollection();
+        const coll = await this.getCollection();
 
         let obj = DatabaseObject.pickFields(this);
         delete obj._odmLock;
@@ -117,7 +118,7 @@ export abstract class DatabaseObject {
         }
 
         if (this.isNew()) {
-            let result = await coll.insertOne(obj);
+            const result = await coll.insertOne(obj);
             this._id = result.insertedId;
         } else {
             if (!this._id) {
@@ -133,7 +134,7 @@ export abstract class DatabaseObject {
                     filter.$or.push({"_odmLock.uuid": _.get(this, "_odmLock.uuid")});
                 }
             }
-            let result = await coll.findOneAndUpdate(
+            const result = await coll.findOneAndUpdate(
                 filter,
                 {$set: obj},
                 {
@@ -154,16 +155,16 @@ export abstract class DatabaseObject {
     }
 
     private static copyFields(fields:any, source:DatabaseObject):any{
-        let ret = {}
+        const ret = {}
 
-        for(let key in fields){
-            if (!fields.hasOwnProperty(key)) {
+        for(const key in fields){
+            if (!Object.hasOwn(fields, key)) {
                 continue;
             }
             if(typeof fields[key] === 'object'){
-                let f = this.copyFields(fields[key], source[key]);
-                for(let k in f){
-                    if (f.hasOwnProperty(k)) {
+                const f = this.copyFields(fields[key], source[key]);
+                for(const k in f){
+                    if (Object.hasOwn(f, k)) {
                         ret[key + '.' + k] = f[k]
                     }
                 }
@@ -191,9 +192,9 @@ export abstract class DatabaseObject {
             } else if (Class.excludedFields) {
                 return this.pickFields(_.omit(obj, Class.excludedFields));
             } else {
-                let ret = {}
+                const ret = {}
                 for (const k in obj) {
-                    if (obj.hasOwnProperty(k)) {
+                    if (Object.hasOwn(obj, k)) {
                         ret[k] = this.pickFields(obj[k]);
                     }
                 }
@@ -205,7 +206,7 @@ export abstract class DatabaseObject {
     }
 
     public static async findOneAndUpdate<Type extends DatabaseObject>(filter: any, update: any, options?: FindOneAndUpdateOptions):Promise<Type>{
-        let coll = await this._getCollection();
+        const coll = await this._getCollection();
 
         if (options && options.includeResultMetadata) {
             throw new Error("The option 'includeResultMetadata' is not supported.");
@@ -218,7 +219,7 @@ export abstract class DatabaseObject {
             }
         });
 
-        let result = await coll.findOneAndUpdate(filter, update, options) as Type;
+        const result = await coll.findOneAndUpdate(filter, update, options) as Type;
 
         if(result){
             return this._instantiate<Type>(result)
@@ -228,7 +229,7 @@ export abstract class DatabaseObject {
     }
 
     public static async updateMany(filter: any, update: any, options?: any): Promise<number> {
-        let coll = await this._getCollection();
+        const coll = await this._getCollection();
 
         _.keys(update).forEach((key) => {
             this.validateFields(update[key]);
@@ -237,13 +238,13 @@ export abstract class DatabaseObject {
             }
         });
 
-        let result = await coll.updateMany(filter, update, options);
+        const result = await coll.updateMany(filter, update, options);
 
         return result.modifiedCount;
     }
 
     private static validateFields(obj: any) {
-        let Class = (this as any) as Decoratable;
+        const Class = (this as any) as Decoratable;
 
         const objectKeys = _.keys(obj);
         if (Class.fields && Class.fields.length > 0){
@@ -272,8 +273,8 @@ export abstract class DatabaseObject {
     }
 
 
-    public static async count<Type extends DatabaseObject>(filter: any):Promise<number>{
-        let coll = await this._getCollection();
+    public static async count(filter: any):Promise<number>{
+        const coll = await this._getCollection();
 
         return await coll.countDocuments(filter);
     }
@@ -283,11 +284,11 @@ export abstract class DatabaseObject {
      * @returns {Type}
      */
     protected updateFields<Type extends DatabaseObject>():Type {
-        let Class = (this.constructor as any) as Decoratable;
+        const Class = (this.constructor as any) as Decoratable;
 
         if (Class.typedFields) {
             for (const key in Class.typedFields) {
-                if (Class.typedFields.hasOwnProperty(key)) {
+                if (Object.hasOwn(Class.typedFields, key)) {
                     this.updateField(key, Class.typedFields[key]);
                 }
             }
@@ -297,7 +298,7 @@ export abstract class DatabaseObject {
     }
 
     private updateField(key: string, Type: any) {
-        let self = <any>this;
+        const self = <any>this;
 
         if (Type._instantiate) {
             self[key] = Type._instantiate(self[key]);
@@ -307,7 +308,7 @@ export abstract class DatabaseObject {
     }
 
     async remove():Promise<void>{
-        let coll = await this.getCollection();
+        const coll = await this.getCollection();
 
         await coll.deleteOne({_id:this._id});
 
@@ -315,7 +316,7 @@ export abstract class DatabaseObject {
     }
 
     static async removeMany(filter: any):Promise<void>{
-        let coll = await this._getCollection();
+        const coll = await this._getCollection();
 
         await coll.deleteMany(filter);
     }
@@ -325,10 +326,10 @@ export abstract class DatabaseObject {
     }
 
     protected static _instantiate<Type extends DatabaseObject>(obj: Partial<Type>, ctor?: new () => Type): Type {
-        let self = ctor || <any>this;
+        const self = ctor || <any>this;
 
-        let ret = new self();
-        let Class = ret.constructor as Decoratable;
+        const ret = new self();
+        const Class = ret.constructor as Decoratable;
         delete ret._odmIsNew;
         if (Class.fields) {
             Object.assign(ret, _.pick(obj, "_id", "_odmLock", ...Class.fields));
@@ -352,7 +353,7 @@ export abstract class DatabaseObject {
 
     public static getCollectionName(): string {
         const Class = (this as any) as Decoratable;
-        return (Class.hasOwnProperty("collectionName") && Class.collectionName) || (this.name.toLocaleLowerCase() + "s");
+        return (Object.hasOwn(Class, "collectionName") && Class.collectionName) || (this.name.toLocaleLowerCase() + "s");
     }
 
     public static getLockOptions(): LockOptions {
@@ -362,7 +363,7 @@ export abstract class DatabaseObject {
 
     private static async _getCollection(): Promise<MongoLikeCollection> {
         const Class = (this as any) as (hasCollection & Decoratable);
-        if (!(Class.collection && Class.hasOwnProperty("collection"))) {
+        if (!(Class.collection && Object.hasOwn(Class, "collection"))) {
             Class.collection = await DB.collection(Class.getCollectionName());
             const listener = function() {
                 delete Class.collection;

@@ -8,7 +8,9 @@ import {MONGO} from "./helper/env.js";
 describe('DatabaseObject', async function(){
 
     before(async function() {
-        this.timeout() && this.timeout(7000);
+        if (this.timeout()) {
+            this.timeout(7000);
+        }
         console.log(MONGO);
         await DB.mongoConnect(MONGO);
 
@@ -41,7 +43,7 @@ describe('DatabaseObject', async function(){
     });
 
     it('stores objects to db and loads it again', async function(){
-        let obj = new DBObject({
+        const obj = new DBObject({
                 number: 1001,
                 string: 'Some silly test string 1',
                 object: {name: 'Hello1', value: 'World1'},
@@ -69,7 +71,7 @@ describe('DatabaseObject', async function(){
         assert.isUndefined((obj2 as any).value);
         assert.isUndefined((obj3 as any).value);
 
-        let ret1 = await DBObject.findOne<DBObject>({number:1001});
+        const ret1 = await DBObject.findOne<DBObject>({number:1001});
 
         assert.equal(ret1.number, 1001);
         assert.equal(ret1.string, 'Some silly test string ' + 1);
@@ -77,17 +79,17 @@ describe('DatabaseObject', async function(){
         assert.deepEqual(ret1.array, obj.array);
         assert.deepEqual(ret1.arrayarray, obj.arrayarray);
 
-        let objects = await DBObject.find<DBObject>({number: {$lte:1999}});
+        const objects = await DBObject.find<DBObject>({number: {$lte:1999}});
 
         assert.equal(objects.length, 3);
-        for(let o of objects){
-            let index = o.number - 1000;
+        for(const o of objects){
+            const index = o.number - 1000;
             assert.equal(o.number, 1000 + index);
             assert.equal(o.string, 'Some silly test string ' + index)
         }
 
         await DBObject.findEach<DBObject>({number: {$lte:1999}}, o => {
-            let index = o.number - 1000;
+            const index = o.number - 1000;
             assert.equal(o.number, 1000 + index);
             assert.equal(o.string, 'Some silly test string ' + index)
             }
@@ -148,7 +150,7 @@ describe('DatabaseObject', async function(){
     });
 
     it('updateMany', async function(){
-        let obj = new DBObject({
+        const obj = new DBObject({
                 number: 1001,
                 string: 'Some silly test string 1',
                 object: {name: 'Hello1', value: 'World1'},
@@ -173,15 +175,15 @@ describe('DatabaseObject', async function(){
         await obj2.save();
         await obj3.save();
 
-        let ret1 = await DBObject.updateMany({number: {$lt: 1003}}, {$set: {update: true}});
+        const ret1 = await DBObject.updateMany({number: {$lt: 1003}}, {$set: {update: true}});
 
         assert.equal(ret1, 2);
 
-        let objects = await DBObject.find<DBObject>({number: {$lte:1999}});
+        const objects = await DBObject.find<DBObject>({number: {$lte:1999}});
 
         assert.equal(objects.length, 3);
-        for(let o of objects){
-            let index = o.number - 1000;
+        for(const o of objects){
+            const index = o.number - 1000;
             assert.equal(o.number, 1000 + index);
             assert.equal(o.string, 'Some silly test string ' + index);
 
@@ -194,7 +196,7 @@ describe('DatabaseObject', async function(){
 
     it('stores selective fields', async function(){
 
-        let obj = new DBObject({
+        const obj = new DBObject({
             number: 2001,
             string: 'Some silly test string',
             object: {name: 'Hello', value: 'World'},
@@ -209,8 +211,8 @@ describe('DatabaseObject', async function(){
 
         await obj.save({array:1});
 
-        let ret1 = await DBObject.findOne<DBObject>({number:2001});
-        let ret2 = await DBObject.findOne<DBObject>({number:2002});
+        const ret1 = await DBObject.findOne<DBObject>({number:2001});
+        const ret2 = await DBObject.findOne<DBObject>({number:2002});
 
         assert.isNull(ret2);
 
@@ -223,7 +225,7 @@ describe('DatabaseObject', async function(){
     it('remove() and removeMany()', async function(){
 
         for(let i = 0; i < 3; i++) {
-            let obj = new DBObject({
+            const obj = new DBObject({
                 number: 4001,
                 string: 'Remove Test ' + (i + 1),
                 object: {name: 'Hello', value: 'World'},
@@ -250,7 +252,7 @@ describe('DatabaseObject', async function(){
 
     it('savesAndUpdates an object', async function(){
 
-        let obj = new DBObject({
+        const obj = new DBObject({
             number: 3001,
             string: 'Some silly test string',
             object: {name: 'Hello', value: 'World'},
@@ -260,7 +262,7 @@ describe('DatabaseObject', async function(){
         await obj.save();
 
 
-        let ret = await DBObject.findOneAndUpdate<DBObject>({_id:obj._id}, {$inc: {number: 2}, $set: {string: "Another Test String"}}, {returnDocument: ReturnDocument.AFTER});
+        const ret = await DBObject.findOneAndUpdate<DBObject>({_id:obj._id}, {$inc: {number: 2}, $set: {string: "Another Test String"}}, {returnDocument: ReturnDocument.AFTER});
 
         assert.equal(ret.number, 3003);
         assert.equal(ret.string, "Another Test String");
@@ -268,7 +270,7 @@ describe('DatabaseObject', async function(){
         assert.deepEqual(ret.array, obj.array);
         assert.deepEqual(ret.arrayarray, obj.arrayarray);
 
-        let ret2 = await DBObject.findOne<DBObject>({_id:obj._id});
+        const ret2 = await DBObject.findOne<DBObject>({_id:obj._id});
 
         assert.equal(ret2.number, 3003);
         assert.equal(ret2.string, "Another Test String");
@@ -276,7 +278,7 @@ describe('DatabaseObject', async function(){
         assert.deepEqual(ret2.array, obj.array);
         assert.deepEqual(ret2.arrayarray, obj.arrayarray);
 
-        let ret3 = await DBObject.findOneAndUpdate<DBObject>({_id:obj._id, number: 0}, {$inc: {number: 2}, $set: {string: "Another Test String"}}, {returnDocument: ReturnDocument.AFTER});
+        const ret3 = await DBObject.findOneAndUpdate<DBObject>({_id:obj._id, number: 0}, {$inc: {number: 2}, $set: {string: "Another Test String"}}, {returnDocument: ReturnDocument.AFTER});
 
         assert.isNull(ret3)
     });
@@ -295,7 +297,7 @@ describe('DatabaseObject', async function(){
         assert.equal(count, 5);
 
         count = 0;
-        let values = [];
+        const values = [];
         await TestClass.findEach<TestClass>({"object.name": "skips results in findEach"}, (obj) => {
             count++;
             values.push(obj.object.value);
@@ -431,7 +433,7 @@ describe('DatabaseObject', async function(){
         updateFields<Type extends DatabaseObject>(): Type {
             super.updateFields();
 
-            let obj = this.object;
+            const obj = this.object;
             this.object = new SubClass();
             Object.assign(this.object, obj);
 
@@ -447,17 +449,17 @@ describe('DatabaseObject', async function(){
     it('instantiates properties through updateFields', async function(){
 
         for(let i = 0; i < 5; i++){
-            let obj = new TestClass('Hello' + i, 'World');
+            const obj = new TestClass('Hello' + i, 'World');
             await obj.save();
             assert.instanceOf(obj.object, SubClass);
         }
 
-        let test = await TestClass.findOne<TestClass>({'object.name':'Hello0'});
+        const test = await TestClass.findOne<TestClass>({'object.name':'Hello0'});
 
         assert.instanceOf(test.object, SubClass);
         assert.equal(test.object.toString(), 'Hello0=World');
 
-        let test2 = await TestClass.find<TestClass>({});
+        const test2 = await TestClass.find<TestClass>({});
 
         for(let i = 0; i < 5; i++){
             assert.instanceOf(test2[i].object, SubClass);
@@ -571,7 +573,7 @@ describe('DatabaseObject', async function(){
 
     it('it returns null for no Object found on findOne', async function(){
 
-        let res = await DBObject.findOne({doesnot: "exist"});
+        const res = await DBObject.findOne({doesnot: "exist"});
 
         assert.isNull(res);
     });
@@ -600,6 +602,8 @@ describe('DatabaseObject', async function(){
         interface TestObjectInterface extends BaseInterface {
             value2 : string;
         }
+        // T is a phantom type parameter used only for typing instantiate()'s return value
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         class TestObject<T extends BaseInterface = BaseInterface> extends DatabaseObject {
             public static instantiate<T extends BaseInterface = BaseInterface>(obj: T): TestObject<T> & T {
                 return DatabaseObject._instantiate<TestObject<T>>(obj as Partial<TestObject<T>>, TestObject) as TestObject<T> & T;

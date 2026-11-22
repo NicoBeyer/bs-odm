@@ -1,6 +1,6 @@
 import {DatabaseObject, hasCollection} from "./DatabaseObject.js";
 
-export interface Decoratable extends Function, Object {
+export interface Decoratable extends NewableFunction {
     fields: string[];
     excludedFields: string[];
     typedFields: any;
@@ -18,7 +18,7 @@ export interface OdmLock {
 }
 
 export function field(type?: any) {
-    return function (target: Object, key: string): void {
+    return function (target: object, key: string): void {
         const targetClass = (target.constructor as any) as Decoratable;
         targetClass.fields = targetClass.fields || [];
         targetClass.fields.push(key);
@@ -33,7 +33,7 @@ export function field(type?: any) {
 }
 
 export function exclude() {
-    return function (target: Object, key: string): void {
+    return function (target: object, key: string): void {
         const targetClass = (target.constructor as any) as Decoratable;
         targetClass.excludedFields = targetClass.excludedFields || [];
         targetClass.excludedFields.push(key);
@@ -41,14 +41,14 @@ export function exclude() {
 }
 
 export function collection(name?: string) {
-    return function (constructor: Function) {
+    return function (constructor: abstract new (...args: any[]) => unknown): void {
         const  Class= ((constructor as any) as Decoratable & hasCollection);
         Class.collectionName = name || Class.getCollectionName();
     }
 }
 
 export function lockable(ttlMillis = 1000) {
-    return function (constructor: Function) {
+    return function (constructor: abstract new (...args: any[]) => unknown): void {
         const Class= ((constructor as any) as Decoratable & hasCollection);
         Class._odmLockable = {ttlMillis};
     }

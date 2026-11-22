@@ -1,4 +1,4 @@
-import {DB, DB as OdmDb} from "../src/index.js";
+import {DB as OdmDb} from "../src/index.js";
 import {MongoClient} from "mongodb";
 import {assert} from "chai";
 import {DbObj} from "./classes/DbObj.js";
@@ -62,7 +62,7 @@ describe("DB", async function(){
             o.test = "fail";
             await o.save();
             assert.fail("An error should have been thrown.");
-        } catch(err) {
+        } catch {
             // an error here is just fine.
         }
 

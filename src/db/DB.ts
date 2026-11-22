@@ -14,9 +14,9 @@ export interface MongoLikeDb {
     collections(): Promise<MongoLikeCollection[]>;
 }
 
-export interface MongoLikeCollection extends Pick<Collection, "findOne" | "find" |
+export type MongoLikeCollection = Pick<Collection, "findOne" | "find" |
     "insertOne" | "updateOne" | "findOneAndUpdate" | "updateMany" |
-    "countDocuments" | "deleteMany" | "deleteOne"> {}
+    "countDocuments" | "deleteMany" | "deleteOne">;
 
 export class _DB extends EventEmitter {
     public readonly EVENT_CONNECTING = "connecting";
@@ -95,4 +95,4 @@ export class _DB extends EventEmitter {
 
 }
 
-export let DB = new _DB();
+export const DB = new _DB();
