@@ -1,10 +1,10 @@
-import {DB, MongoLikeCollection} from './DB'
+import {DB, MongoLikeCollection} from './DB.js'
 import {Document, FindOneAndUpdateOptions, ObjectId, ReturnDocument, WithId} from "mongodb";
-import * as _ from "lodash";
-import {Decoratable, LockOptions, OdmLock} from "./Decorators";
-import {v4 as uuidv4} from "uuid";
-import {EnhancedFilterQuery} from "../selector/EnhancedFilterQuery";
-import {setTimeout} from "timers/promises";
+import _ from "lodash";
+import {Decoratable, LockOptions, OdmLock} from "./Decorators.js";
+import {randomUUID} from "node:crypto";
+import {EnhancedFilterQuery} from "../selector/EnhancedFilterQuery.js";
+import {setTimeout} from "node:timers/promises";
 
 export type SortDirection = 1 | -1;
 
@@ -381,7 +381,7 @@ export abstract class DatabaseObject {
         const ttl = ttlMillis || _.get(lockOptions, "ttlMillis") || 1000;
         const timeout = ttl === -1 ? Number.MAX_SAFE_INTEGER : Date.now() + ttl;
         const _odmLock = {
-            uuid: _.get(this, "_odmLock.uuid") || uuidv4(),
+            uuid: _.get(this, "_odmLock.uuid") || randomUUID(),
             timeout: timeout
         } as OdmLock;
 

@@ -1,7 +1,7 @@
 import {assert} from "chai";
-import {DatabaseObject, DB} from "../src";
-import {EnhancedFilterQuery} from "../src/selector/EnhancedFilterQuery";
-import {MONGO} from "./helper/env";
+import {DatabaseObject, DB} from "../src/index.js";
+import {EnhancedFilterQuery} from "../src/selector/EnhancedFilterQuery.js";
+import {MONGO} from "./helper/env.js";
 
 describe("EnhancedFilterQueryTest", async function () {
 

@@ -1,9 +1,9 @@
 import { assert } from 'chai'
-import {DB, DatabaseObject} from '../src'
-import {setTimeout} from "timers/promises";
-import * as _ from "lodash";
+import {DB, DatabaseObject} from '../src/index.js'
+import {setTimeout} from "node:timers/promises";
+import _ from "lodash";
 import {ReturnDocument} from "mongodb";
-import {MONGO} from "./helper/env";
+import {MONGO} from "./helper/env.js";
 
 describe('DatabaseObject', async function(){
 

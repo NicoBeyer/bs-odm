@@ -1,4 +1,4 @@
-import {DatabaseObject} from "../../src";
+import {DatabaseObject} from "../../src/index.js";
 
 export class DbObj extends DatabaseObject {
 

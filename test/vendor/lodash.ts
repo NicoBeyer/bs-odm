@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import * as _ from "lodash";
+import _ from "lodash";
 
 describe("lodash", async function () {
     it("includes() is strict", async function () {

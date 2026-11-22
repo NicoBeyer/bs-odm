@@ -1,9 +1,35 @@
 import {assert} from "chai";
-import {DB} from "../src";
-import {LockableObj} from "./classes/LockableObj";
-import {setTimeout} from "timers/promises";
-import * as _ from "lodash";
-import {MONGO} from "./helper/env";
+import {DB} from "../src/index.js";
+import {LockableObj} from "./classes/LockableObj.js";
+import {setTimeout} from "node:timers/promises";
+import _ from "lodash";
+import {MONGO} from "./helper/env.js";
+
+/**
+ * Saves a LockableObj, locks it for 50ms, verifies that a second copy cannot be saved
+ * while the lock is held and waits until the lock has expired.
+ * @return the second copy, whose lock has timed out.
+ */
+async function createCopyBlockedByExpiredLock(): Promise<LockableObj> {
+    await DB.collection("lockables");
+
+    const lockable = new LockableObj("Test1");
+    await lockable.save();
+    const lockable2 = await LockableObj.findOne<LockableObj>({_id: lockable._id});
+    lockable2.value = "lockable2.save()";
+
+    await lockable.lock(50);
+
+    try {
+        await lockable2.save();
+        assert.fail("An Error should have been thrown.");
+    } catch (err) {
+        assert.isOk(err.message.indexOf("Unable to save document") !== -1);
+    }
+
+    await setTimeout(55);
+    return lockable2;
+}
 
 describe("LockableTest", async function () {
 
@@ -72,45 +98,13 @@ describe("LockableTest", async function () {
     });
 
     it("lock object with timed out lock", async function() {
-        await DB.collection("lockables");
-
-        const lockable = new LockableObj("Test1");
-        await lockable.save();
-        const lockable2 = await LockableObj.findOne<LockableObj>({_id: lockable._id});
-        lockable2.value = "lockable2.save()";
-
-        await lockable.lock(50);
-
-        try {
-            await lockable2.save();
-            assert.fail("An Error should have been thrown.");
-        } catch (err) {
-            assert.isOk(err.message.indexOf("Unable to save document") !== -1);
-        }
-
-        await setTimeout(55);
+        const lockable2 = await createCopyBlockedByExpiredLock();
 
         await lockable2.lock();
     });
 
     it("lock timeout", async function() {
-        await DB.collection("lockables");
-
-        const lockable = new LockableObj("Test1");
-        await lockable.save();
-        const lockable2 = await LockableObj.findOne<LockableObj>({_id: lockable._id});
-        lockable2.value = "lockable2.save()";
-
-        await lockable.lock(50);
-
-        try {
-            await lockable2.save();
-            assert.fail("An Error should have been thrown.");
-        } catch (err) {
-            assert.isOk(err.message.indexOf("Unable to save document") !== -1);
-        }
-
-        await setTimeout(55);
+        const lockable2 = await createCopyBlockedByExpiredLock();
 
         await lockable2.save();
     });

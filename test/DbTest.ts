@@ -1,8 +1,8 @@
-import {DB, DB as OdmDb} from "../src";
+import {DB, DB as OdmDb} from "../src/index.js";
 import {MongoClient} from "mongodb";
 import {assert} from "chai";
-import {DbObj} from "./classes/DbObj";
-import {MONGO} from "./helper/env";
+import {DbObj} from "./classes/DbObj.js";
+import {MONGO} from "./helper/env.js";
 
 const URI = MONGO;
 

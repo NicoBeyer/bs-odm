@@ -1,7 +1,7 @@
 import {Collection, CollectionOptions, MongoClient, MongoClientOptions} from "mongodb";
-import {EventEmitter} from "events";
+import {EventEmitter} from "node:events";
 
-export {DatabaseObject} from './DatabaseObject';
+export {DatabaseObject} from './DatabaseObject.js';
 
 export interface MongoLikeClient {
     db(name: string): MongoLikeDb;

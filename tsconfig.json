@@ -1,15 +1,23 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "lib": ["es2019"],
-    "target": "es2019",
-    "declaration": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es2024",
+    "lib": ["es2024"],
+    "types": ["node", "mocha"],
+    "rootDir": ".",
     "outDir": "lib/",
-    "experimentalDecorators": true
+    "declaration": true,
+    "sourceMap": true,
+    "strict": false,
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": false,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "skipLibCheck": true
   },
-  "exclude": [
-    "node_modules",
-    "lib"
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
   ]
 }

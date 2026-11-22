@@ -33,21 +33,21 @@ steps:
         - 'node_modules'
 
   - name: build
-    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node18-aws
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node26-aws
     commands:
       - node -v
       - npm -v
-      - tsc -v
+      - npx tsc -v
       - npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
       - npm i
       - git add package-lock.json && git commit -m "package-lock [CI SKIP]" || true
-      - tsc
+      - npx tsc
     environment:
       NPM_TOKEN:
         from_secret: NPM_TOKEN
 
   - name: unittest
-    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node18-aws
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node26-aws
     commands:
       - npm test
     environment:
@@ -61,7 +61,7 @@ steps:
         from_secret: AWS_DEFAULT_REGION
 
   - name: publish
-    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node18-aws
+    image: 095565711062.dkr.ecr.eu-west-1.amazonaws.com/beyer.dev.drone:node26-aws
     commands:
       - npm config set //registry.npmjs.org/:_authToken $NPM_PUBLISH_TOKEN
       - git config user.email $DRONE_COMMIT_AUTHOR_EMAIL
@@ -107,6 +107,6 @@ services:
 
 ---
 kind: signature
-hmac: dd77c7226a9cd079a8df798abc60b843478a84d04aebe1336538e41a977bfca7
+hmac: 5f9e3e148b0ff32584ad298dda27f7b06976af8fc332085d840fd7691bd05721
 
 ...

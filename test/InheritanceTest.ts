@@ -1,7 +1,38 @@
 import {assert} from "chai";
-import {collection, DatabaseObject, DB} from "../src";
-import * as _ from "lodash";
-import {MONGO} from "./helper/env";
+import {collection, DatabaseObject, DB} from "../src/index.js";
+import _ from "lodash";
+import {MONGO} from "./helper/env.js";
+
+interface ParentLike extends DatabaseObject {
+    value: string;
+}
+
+interface ChildLike extends ParentLike {
+    childValue: string;
+}
+
+async function saveParent<T extends ParentLike>(parent: T): Promise<T> {
+    parent.value = "Parent1";
+    await parent.save();
+    return parent;
+}
+
+async function saveChild<T extends ChildLike>(child: T): Promise<T> {
+    child.value = "Child1";
+    child.childValue = "Child1";
+    await child.save();
+    return child;
+}
+
+async function assertStored(parentCollection: string, parent: DatabaseObject, childCollection: string, child: DatabaseObject) {
+    const resParents = await (await DB.collection(parentCollection)).find({}).toArray();
+    const resChildren = await (await DB.collection(childCollection)).find({}).toArray();
+
+    assert.lengthOf(resParents, 1);
+    assert.lengthOf(resChildren, 1);
+    assert.deepEqual(_.omit(resParents[0], "_id"), parent.getPlainOldObject());
+    assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
+}
 
 describe("InheritanceTest", async function () {
 
@@ -14,26 +45,12 @@ describe("InheritanceTest", async function () {
             childValue: string;
         }
 
-        const parent = new Parent();
-        parent.value = "Parent1";
-        await parent.save();
+        const parent = await saveParent(new Parent());
 
         assert.deepEqual(Child.getCollectionName(), "childs");
-        const child = new Child();
-        child.value = "Child1";
-        child.childValue = "Child1";
-        await child.save();
+        const child = await saveChild(new Child());
 
-        const children = await DB.collection("childs");
-        const parents = await DB.collection("parents");
-
-        const resParents = await parents.find({}).toArray();
-        const resChildren = await children.find({}).toArray();
-
-        assert.lengthOf(resParents, 1);
-        assert.lengthOf(resChildren, 1);
-        assert.deepEqual(_.omit(resParents[0], "_id"), parent.getPlainOldObject());
-        assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
+        await assertStored("parents", parent, "childs", child);
 
     });
 
@@ -47,26 +64,12 @@ describe("InheritanceTest", async function () {
             childValue: string;
         }
 
-        const parent = new Parent();
-        parent.value = "Parent1";
-        await parent.save();
+        const parent = await saveParent(new Parent());
 
         assert.deepEqual(Child.getCollectionName(), "childs");
-        const child = new Child();
-        child.value = "Child1";
-        child.childValue = "Child1";
-        await child.save();
+        const child = await saveChild(new Child());
 
-        const parents = await DB.collection("elders");
-        const children = await DB.collection("childs");
-
-        const resParents = await parents.find({}).toArray();
-        const resChildren = await children.find({}).toArray();
-
-        assert.lengthOf(resParents, 1);
-        assert.lengthOf(resChildren, 1);
-        assert.deepEqual(_.omit(resParents[0], "_id"), parent.getPlainOldObject());
-        assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
+        await assertStored("elders", parent, "childs", child);
 
     });
 
@@ -81,26 +84,12 @@ describe("InheritanceTest", async function () {
             childValue: string;
         }
 
-        const parent = new Parent();
-        parent.value = "Parent1";
-        await parent.save();
+        const parent = await saveParent(new Parent());
 
         assert.deepEqual(Child.getCollectionName(), "children");
-        const child = new Child();
-        child.value = "Child1";
-        child.childValue = "Child1";
-        await child.save();
+        const child = await saveChild(new Child());
 
-        const parents = await DB.collection("parents");
-        const children = await DB.collection("children");
-
-        const resParents = await parents.find({}).toArray();
-        const resChildren = await children.find({}).toArray();
-
-        assert.lengthOf(resParents, 1);
-        assert.lengthOf(resChildren, 1);
-        assert.deepEqual(_.omit(resParents[0], "_id"), parent.getPlainOldObject());
-        assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
+        await assertStored("parents", parent, "children", child);
 
     });
 
@@ -116,26 +105,12 @@ describe("InheritanceTest", async function () {
             childValue: string;
         }
 
-        const parent = new Parent();
-        parent.value = "Parent1";
-        await parent.save();
+        const parent = await saveParent(new Parent());
 
         assert.deepEqual(Child.getCollectionName(), "children");
-        const child = new Child();
-        child.value = "Child1";
-        child.childValue = "Child1";
-        await child.save();
+        const child = await saveChild(new Child());
 
-        const parents = await DB.collection("elders");
-        const children = await DB.collection("children");
-
-        const resParents = await parents.find({}).toArray();
-        const resChildren = await children.find({}).toArray();
-
-        assert.lengthOf(resParents, 1);
-        assert.lengthOf(resChildren, 1);
-        assert.deepEqual(_.omit(resParents[0], "_id"), parent.getPlainOldObject());
-        assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
+        await assertStored("elders", parent, "children", child);
 
     });
 
@@ -149,25 +124,11 @@ describe("InheritanceTest", async function () {
         }
 
         assert.deepEqual(Child.getCollectionName(), "childs");
-        const child = new Child();
-        child.value = "Child1";
-        child.childValue = "Child1";
-        await child.save();
+        const child = await saveChild(new Child());
 
-        const parent = new Parent();
-        parent.value = "Parent1";
-        await parent.save();
+        const parent = await saveParent(new Parent());
 
-        const children = await DB.collection("childs");
-        const parents = await DB.collection("parents");
-
-        const resParents = await parents.find({}).toArray();
-        const resChildren = await children.find({}).toArray();
-
-        assert.lengthOf(resParents, 1);
-        assert.lengthOf(resChildren, 1);
-        assert.deepEqual(_.omit(resParents[0], "_id"), parent.getPlainOldObject());
-        assert.deepEqual(_.omit(resChildren[0], "_id"), child.getPlainOldObject());
+        await assertStored("parents", parent, "childs", child);
 
     });
 

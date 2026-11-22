@@ -1,5 +1,5 @@
-import {MongoLikeCollection} from "../db/DB";
-import * as _ from "lodash";
+import {MongoLikeCollection} from "../db/DB.js";
+import _ from "lodash";
 
 export class EnhancedFilterQuery {
 

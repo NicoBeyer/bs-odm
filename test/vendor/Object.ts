@@ -8,7 +8,7 @@ describe("Object", async function() {
         const dateObj = Object.assign({}, date1);
         const dateObj2 = JSON.parse(JSON.stringify(date1));
 
-        console.log(dateObj);
+        console.log(dateObj, dateObj2);
 
     });
 

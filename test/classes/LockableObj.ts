@@ -1,4 +1,4 @@
-import {collection, DatabaseObject, lockable} from "../../src";
+import {collection, DatabaseObject, lockable} from "../../src/index.js";
 
 
 @lockable(-1)

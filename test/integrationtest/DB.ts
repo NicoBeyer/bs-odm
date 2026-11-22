@@ -1,5 +1,4 @@
-import {assert} from "chai";
-import {DB} from "../../src";
+import {DB} from "../../src/index.js";
 
 describe("NAME", async function () {
 

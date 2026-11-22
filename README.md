@@ -1,6 +1,6 @@
 ﻿# bs-odm
 
-Setting up your database mapper can become very cumbersome. Defining schemas, properties, deriving Models etc, etc.
+Setting up your database mapper can become very cumbersome. Defining schemas, properties, deriving Models, etc.
 All this has its place, but sometimes you just want to create objects dump them into your database, retrieve them, modify them and be done with it.
 
 This is where bs-odm comes in. It allows you to do just that.
@@ -162,13 +162,13 @@ You can use decorators to control the fields stored on nested classes.
 
 ### Bring your own NoSQL database
 
-bs-odm supports mongodb out of the box. You can directly connect to the database by calling the appropriate functions on the global DB object:
+bs-odm supports MongoDB out of the box. You can directly connect to the database by calling the appropriate functions on the global DB object:
 
     await DB.mongoConnect("mongodb://localhost/database");
         
     await DB.disconnect(true);
 
-MongoDb ist great, but it is always nice to be independent.
+MongoDB is great, but it is always nice to be independent.
 If you want to have more control over the connection you can bring your own client:
 
     const client: MongoLikeClient = ... // Your own client initialization
@@ -179,7 +179,7 @@ If you want to have more control over the connection you can bring your own clie
 
     const db: MongoLikeDb = ... // Your own database initialization
     
-Those don't have to be MongoDb, als long as the objects satisfy the MongoLikeClient or MongoLikeDb interface contracts,
+Those don't have to be MongoDB, as long as the objects satisfy the MongoLikeClient or MongoLikeDb interface contracts,
 you can bring whichever database backend you like.
 
 ## Locking

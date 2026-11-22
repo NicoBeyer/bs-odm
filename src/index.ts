@@ -1,4 +1,4 @@
 
-export {DB} from './db/DB';
-export * from './db/DatabaseObject';
-export * from "./db/Decorators";
+export {DB} from './db/DB.js';
+export * from './db/DatabaseObject.js';
+export * from "./db/Decorators.js";

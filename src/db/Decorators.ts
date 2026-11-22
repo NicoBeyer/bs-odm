@@ -1,4 +1,4 @@
-import {DatabaseObject, hasCollection} from "./DatabaseObject";
+import {DatabaseObject, hasCollection} from "./DatabaseObject.js";
 
 export interface Decoratable extends Function, Object {
     fields: string[];
