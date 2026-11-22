@@ -98,4 +98,8 @@ describe("DB", async function(){
         await OdmDb.disconnect();
     });
 
+    after(async function() {
+        await OdmDb.disconnect(true);
+    });
+
 });

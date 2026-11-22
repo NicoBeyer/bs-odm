@@ -51,7 +51,7 @@ steps:
     commands:
       - npm test
     environment:
-      MONGO_URL: mongodb://mongo/
+      MONGO_URL: mongodb://mongo
       AWS_ACCESS_KEY_ID:
         from_secret: AWS_ACCESS_KEY_ID
       AWS_SECRET_ACCESS_KEY:
@@ -73,10 +73,6 @@ steps:
     environment:
       NPM_PUBLISH_TOKEN:
         from_secret: NPM_TOKEN
-      DRONE_COMMIT_AUTHOR: $DRONE_COMMIT_AUTHOR
-      DRONE_COMMIT_AUTHOR_EMAIL: $DRONE_COMMIT_AUTHOR_EMAIL
-      DRONE_COMMIT_SHA: $DRONE_COMMIT_SHA
-      DRONE_COMMIT_MESSAGE: $DRONE_COMMIT_MESSAGE
     when:
       branch:
         - master
@@ -101,12 +97,12 @@ steps:
 
 services:
   - name: mongo
-    image: mongo:4.2
+    image: mongo:8.0
 
 
 
 ---
 kind: signature
-hmac: 5f9e3e148b0ff32584ad298dda27f7b06976af8fc332085d840fd7691bd05721
+hmac: ed50042a485cd1879d9b41834ff67f810516a5ef49f72ef54a776c930cebb584
 
 ...

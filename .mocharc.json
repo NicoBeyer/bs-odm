@@ -1,0 +1,4 @@
+{
+  "node-option": ["import=tsx"],
+  "enable-source-maps": true
+}
